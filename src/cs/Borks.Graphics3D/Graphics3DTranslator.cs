@@ -51,6 +51,24 @@ namespace Borks.Graphics3D
         public abstract void Read(Stream stream, Graphics3DTranslatorIO output);
 
         /// <summary>
+        /// Translates the data to the provided file.
+        /// </summary>
+        /// <param name="stream">File to write the data to.</param>
+        /// <param name="input">The <see cref="Graphics3DTranslatorIO"/> that contains the data we are writing.</param>
+        public virtual void Write(string path, Graphics3DTranslatorIO input)
+        {
+            using var stream = File.Create(path);
+            Write(stream, input);
+        }
+
+        /// <summary>
+        /// Translates the data to the provided stream.
+        /// </summary>
+        /// <param name="stream">Stream to write the data to.</param>
+        /// <param name="input">The <see cref="Graphics3DTranslatorIO"/> that contains the data we are writing.</param>
+        public abstract void Write(Stream stream, Graphics3DTranslatorIO input);
+
+        /// <summary>
         /// Checks if the provided input is supported by this translator.
         /// </summary>
         /// <param name="startOfFile">An initial buffer from the start of the file.</param>

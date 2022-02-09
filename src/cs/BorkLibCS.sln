@@ -7,8 +7,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks", "Borks\Borks.csproj
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Graphics3D", "Borks.Graphics3D\Borks.Graphics3D.csproj", "{BDC7C4EA-36D5-4346-94F3-6ACA47AEC0B7}"
 EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Borks.Graphics2D.DirectXTex", "Borks.Graphics2D.DirectXTex\Borks.Graphics2D.DirectXTex.vcxproj", "{B6C44AA2-328D-41F5-9486-CF38C5909763}"
-EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Sandbox", "Borks.Sandbox\Borks.Sandbox.csproj", "{07985F55-1428-4C52-92B0-83097DC39077}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Graphics3D.SEModel", "Borks.Graphics3D.SEModel\Borks.Graphics3D.SEModel.csproj", "{F338255A-B3A8-4110-944F-9763E51E8485}"
@@ -47,18 +45,6 @@ Global
 		{BDC7C4EA-36D5-4346-94F3-6ACA47AEC0B7}.Release|x64.Build.0 = Release|Any CPU
 		{BDC7C4EA-36D5-4346-94F3-6ACA47AEC0B7}.Release|x86.ActiveCfg = Release|Any CPU
 		{BDC7C4EA-36D5-4346-94F3-6ACA47AEC0B7}.Release|x86.Build.0 = Release|Any CPU
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Debug|Any CPU.ActiveCfg = Debug|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Debug|Any CPU.Build.0 = Debug|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Debug|x64.ActiveCfg = Debug|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Debug|x64.Build.0 = Debug|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Debug|x86.ActiveCfg = Debug|Win32
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Debug|x86.Build.0 = Debug|Win32
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Release|Any CPU.ActiveCfg = Release|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Release|Any CPU.Build.0 = Release|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Release|x64.ActiveCfg = Release|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Release|x64.Build.0 = Release|x64
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Release|x86.ActiveCfg = Release|Win32
-		{B6C44AA2-328D-41F5-9486-CF38C5909763}.Release|x86.Build.0 = Release|Win32
 		{07985F55-1428-4C52-92B0-83097DC39077}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
 		{07985F55-1428-4C52-92B0-83097DC39077}.Debug|Any CPU.Build.0 = Debug|Any CPU
 		{07985F55-1428-4C52-92B0-83097DC39077}.Debug|x64.ActiveCfg = Debug|Any CPU

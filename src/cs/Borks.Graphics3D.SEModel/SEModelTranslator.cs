@@ -287,180 +287,197 @@ namespace Borks.Graphics3D.SEModel
             }
         }
 
-        /// <summary>
-        /// Translates the data to the stream
-        /// </summary>
-        /// <param name="stream">Stream</param>
-        /// <param name="data">Data</param>
-        /// <param name="config">Misc config information</param>
-        //public void Write(Stream stream, string name, Model data, float scale, Dictionary<string, string> config)
-        //{
-        //    using var writer = new BinaryWriter(stream, Encoding.Default, true);
+        /// <inheritdoc/>
+        public override void Write(Stream stream, Graphics3DTranslatorIO input)
+        {
+            var data = input.Models.First();
+            var scale = 1.0f;
 
-        //    writer.Write(Magic);
-        //    writer.Write((ushort)0x1);
-        //    writer.Write((ushort)0x14);
-        //    writer.Write((byte)0x7); // Data Presence
-        //    writer.Write((byte)0x7); // Bone Data Presence
-        //    writer.Write((byte)0xF); // Mesh Data Presence
-        //    writer.Write(data.Bones.Count);
-        //    writer.Write(data.Meshes.Count);
-        //    writer.Write(data.Materials.Count);
-        //    writer.Write((byte)0);
-        //    writer.Write((byte)0);
-        //    writer.Write((byte)0);
+            using var writer = new BinaryWriter(stream, Encoding.Default, true);
 
-        //    foreach (var bone in data.Bones)
-        //    {
-        //        writer.Write(Encoding.ASCII.GetBytes(bone.Name));
-        //        writer.Write((byte)0);
-        //    }
+            writer.Write(Magic);
+            writer.Write((ushort)0x1);
+            writer.Write((ushort)0x14);
+            writer.Write((byte)0x7); // Data Presence
+            writer.Write((byte)0x7); // Bone Data Presence
+            writer.Write((byte)0xF); // Mesh Data Presence
+            writer.Write(data.Skeleton.Bones.Count);
+            writer.Write(data.Meshes.Count);
+            writer.Write(data.Materials.Count);
+            writer.Write((byte)0);
+            writer.Write((byte)0);
+            writer.Write((byte)0);
 
-        //    foreach (var bone in data.Bones)
-        //    {
-        //        writer.Write((byte)0); // Unused flags
+            var indexTable = new int[data.Skeleton.Bones.Count];
 
-        //        writer.Write(data.Bones.IndexOf(bone.Parent));
+            for (int i = 0; i < data.Skeleton.Bones.Count; i++)
+            {
+                writer.Write(Encoding.ASCII.GetBytes(data.Skeleton.Bones[i].Name));
+                writer.Write((byte)0);
+            }
 
-        //        var wt = bone.WorldTranslation;
-        //        var wr = bone.WorldRotation;
-        //        var lt = bone.LocalTranslation;
-        //        var lr = bone.LocalRotation;
-        //        var s = Vector3.One;
+            foreach(var bone in data.Skeleton.Bones)
+            {
+                writer.Write((byte)0); // Unused flags
 
-        //        writer.Write(wt.X * scale);
-        //        writer.Write(wt.Y * scale);
-        //        writer.Write(wt.Z * scale);
-        //        writer.Write(wr.X);
-        //        writer.Write(wr.Y);
-        //        writer.Write(wr.Z);
-        //        writer.Write(wr.W);
+                writer.Write(bone.Parent == null ? -1 : data.Skeleton.Bones.IndexOf(bone.Parent));
 
-        //        writer.Write(lt.X * scale);
-        //        writer.Write(lt.Y * scale);
-        //        writer.Write(lt.Z * scale);
-        //        writer.Write(lr.X);
-        //        writer.Write(lr.Y);
-        //        writer.Write(lr.Z);
-        //        writer.Write(lr.W);
+                var wt = bone.GlobalPosition;
+                var wr = bone.GlobalRotation;
+                var lt = bone.LocalPosition;
+                var lr = bone.LocalRotation;
+                var s = Vector3.One;
 
-        //        writer.Write(s.X);
-        //        writer.Write(s.Y);
-        //        writer.Write(s.Z);
-        //    }
+                writer.Write(wt.X * scale);
+                writer.Write(wt.Y * scale);
+                writer.Write(wt.Z * scale);
+                writer.Write(wr.X);
+                writer.Write(wr.Y);
+                writer.Write(wr.Z);
+                writer.Write(wr.W);
 
-        //    foreach (var mesh in data.Meshes)
-        //    {
-        //        var vertCount = mesh.Positions.Count;
-        //        var faceCount = mesh.Faces.Count;
-        //        var layerCount = mesh.UVs.Dimension;
-        //        var influences = mesh.BoneWeights.Count == 0 ? 0 : mesh.BoneWeights.Dimension;
+                writer.Write(lt.X * scale);
+                writer.Write(lt.Y * scale);
+                writer.Write(lt.Z * scale);
+                writer.Write(lr.X);
+                writer.Write(lr.Y);
+                writer.Write(lr.Z);
+                writer.Write(lr.W);
 
-        //        writer.Write((byte)0); // Unused flags
+                writer.Write(s.X);
+                writer.Write(s.Y);
+                writer.Write(s.Z);
+            }
 
-        //        writer.Write((byte)layerCount);
-        //        writer.Write((byte)influences);
-        //        writer.Write(vertCount);
-        //        writer.Write(faceCount);
+            foreach (var mesh in data.Meshes)
+            {
+                var vertCount  = mesh.Positions.Count;
+                var faceCount  = mesh.Faces.Count;
+                var layerCount = mesh.UVLayers.Dimension > 0 ? 1 : mesh.UVLayers.Dimension;
+                var influences = mesh.Influences.Count > 0 ? 0 : mesh.Influences.Dimension;
 
-        //        // Positions
-        //        for (int i = 0; i < mesh.Positions.Count; i++)
-        //        {
-        //            writer.Write(mesh.Positions[i].X * scale);
-        //            writer.Write(mesh.Positions[i].Y * scale);
-        //            writer.Write(mesh.Positions[i].Z * scale);
-        //        }
-        //        // UVs
-        //        for (int i = 0; i < mesh.Positions.Count; i++)
-        //        {
-        //            for (int l = 0; l < layerCount; l++)
-        //            {
-        //                writer.Write(mesh.UVs[i, l].X);
-        //                writer.Write(mesh.UVs[i, l].Y);
-        //            }
-        //        }
-        //        // Normals
-        //        for (int i = 0; i < mesh.Positions.Count; i++)
-        //        {
-        //            writer.Write(mesh.Normals[i].X);
-        //            writer.Write(mesh.Normals[i].Y);
-        //            writer.Write(mesh.Normals[i].Z);
-        //        }
-        //        // Colours
-        //        if (mesh.Colours != null && mesh.Colours.Count != 0)
-        //        {
-        //            for (int i = 0; i < mesh.Positions.Count; i++)
-        //            {
-        //                writer.Write((byte)(mesh.Colours[i].X * 255.0f));
-        //                writer.Write((byte)(mesh.Colours[i].Y * 255.0f));
-        //                writer.Write((byte)(mesh.Colours[i].Z * 255.0f));
-        //                writer.Write((byte)(mesh.Colours[i].W * 255.0f));
-        //            }
-        //        }
-        //        else
-        //        {
-        //            writer.Write(new byte[4 * mesh.Positions.Count]);
-        //        }
-        //        // Weights
-        //        if (influences != 0)
-        //        {
-        //            for (int i = 0; i < mesh.Positions.Count; i++)
-        //            {
-        //                for (int w = 0; w < influences; w++)
-        //                {
-        //                    var (index, value) = mesh.BoneWeights[i, w];
+                writer.Write((byte)0); // Unused flags
 
-        //                    if (data.Bones.Count <= 0xFF)
-        //                        writer.Write((byte)index);
-        //                    else if (data.Bones.Count <= 0xFFFF)
-        //                        writer.Write((ushort)index);
-        //                    else
-        //                        writer.Write(index);
+                writer.Write((byte)layerCount);
+                writer.Write((byte)influences);
+                writer.Write(vertCount);
+                writer.Write(faceCount);
 
-        //                    writer.Write(value);
-        //                }
-        //            }
-        //        }
+                // Positions
+                for (int i = 0; i < mesh.Positions.Count; i++)
+                {
+                    writer.Write(mesh.Positions[i].X * scale);
+                    writer.Write(mesh.Positions[i].Y * scale);
+                    writer.Write(mesh.Positions[i].Z * scale);
+                }
+                // UVs
+                if(mesh.UVLayers.VertexCount == mesh.Positions.VertexCount && mesh.UVLayers.Dimension > 0)
+                {
+                    for (int i = 0; i < mesh.Positions.Count; i++)
+                    {
+                        for (int l = 0; l < layerCount; l++)
+                        {
+                            writer.Write(mesh.UVLayers[i, l].X);
+                            writer.Write(mesh.UVLayers[i, l].Y);
+                        }
+                    }
+                }
+                // Just write 0 values and let the user fix it up in other software.
+                else
+                {
+                    writer.Write(new byte[8 * mesh.Positions.VertexCount * layerCount]);
+                }
+                // Normals
+                if (mesh.Normals.VertexCount == mesh.Positions.VertexCount && mesh.Normals.Dimension > 0)
+                {
+                    for (int i = 0; i < mesh.Positions.Count; i++)
+                    {
+                        writer.Write(mesh.Normals[i].X);
+                        writer.Write(mesh.Normals[i].Y);
+                        writer.Write(mesh.Normals[i].Z);
+                    }
+                }
+                // Just write 0 values and let the user fix it up in other software.
+                else
+                {
+                    writer.Write(new byte[12 * mesh.Positions.VertexCount]);
+                }
+                // Colours
+                if (mesh.Colours.VertexCount == mesh.Positions.VertexCount && mesh.Colours.Dimension > 0)
+                {
+                    for (int i = 0; i < mesh.Positions.Count; i++)
+                    {
+                        writer.Write((byte)(mesh.Colours[i].X * 255.0f));
+                        writer.Write((byte)(mesh.Colours[i].Y * 255.0f));
+                        writer.Write((byte)(mesh.Colours[i].Z * 255.0f));
+                        writer.Write((byte)(mesh.Colours[i].W * 255.0f));
+                    }
+                }
+                // Just write 0 values and let the user fix it up in other software.
+                else
+                {
+                    writer.Write(new byte[4 * mesh.Positions.VertexCount]);
+                }
+                // Weights
+                if (influences != 0)
+                {
+                    for (int i = 0; i < mesh.Positions.Count; i++)
+                    {
+                        for (int w = 0; w < influences; w++)
+                        {
+                            var (index, value) = mesh.Influences[i, w];
 
-        //        foreach (var (firstIndex, secondIndex, thirdIndex) in mesh.Faces)
-        //        {
-        //            if (vertCount <= 0xFF)
-        //            {
-        //                writer.Write((byte)firstIndex);
-        //                writer.Write((byte)secondIndex);
-        //                writer.Write((byte)thirdIndex);
-        //            }
-        //            else if (vertCount <= 0xFFFF)
-        //            {
-        //                writer.Write((ushort)firstIndex);
-        //                writer.Write((ushort)secondIndex);
-        //                writer.Write((ushort)thirdIndex);
-        //            }
-        //            else
-        //            {
-        //                writer.Write(firstIndex);
-        //                writer.Write(secondIndex);
-        //                writer.Write(thirdIndex);
-        //            }
-        //        }
+                            if (data.Skeleton.Bones.Count <= 0xFF)
+                                writer.Write((byte)index);
+                            else if (data.Skeleton.Bones.Count <= 0xFFFF)
+                                writer.Write((ushort)index);
+                            else
+                                writer.Write(index);
 
-        //        foreach (var material in mesh.Materials)
-        //            writer.Write(data.Materials.IndexOf(material));
-        //    }
+                            writer.Write(value);
+                        }
+                    }
+                }
 
-        //    foreach (var material in data.Materials)
-        //    {
-        //        writer.Write(Encoding.ASCII.GetBytes(material.Name));
-        //        writer.Write((byte)0);
-        //        writer.Write(true);
-        //        writer.Write(Encoding.ASCII.GetBytes(material.Images.TryGetValue("DiffuseMap", out var img) ? img : string.Empty));
-        //        writer.Write((byte)0);
-        //        writer.Write(Encoding.ASCII.GetBytes(material.Images.TryGetValue("NormalMap", out img) ? img : string.Empty));
-        //        writer.Write((byte)0);
-        //        writer.Write(Encoding.ASCII.GetBytes(material.Images.TryGetValue("SpecularMap", out img) ? img : string.Empty));
-        //        writer.Write((byte)0);
-        //    }
-        //}
+                foreach (var (firstIndex, secondIndex, thirdIndex) in mesh.Faces)
+                {
+                    if (vertCount <= 0xFF)
+                    {
+                        writer.Write((byte)firstIndex);
+                        writer.Write((byte)secondIndex);
+                        writer.Write((byte)thirdIndex);
+                    }
+                    else if (vertCount <= 0xFFFF)
+                    {
+                        writer.Write((ushort)firstIndex);
+                        writer.Write((ushort)secondIndex);
+                        writer.Write((ushort)thirdIndex);
+                    }
+                    else
+                    {
+                        writer.Write(firstIndex);
+                        writer.Write(secondIndex);
+                        writer.Write(thirdIndex);
+                    }
+                }
+
+                foreach (var material in mesh.Materials)
+                    writer.Write(data.Materials.IndexOf(material));
+            }
+
+            foreach (var material in data.Materials)
+            {
+                writer.Write(Encoding.ASCII.GetBytes(material.Name));
+                writer.Write((byte)0);
+                writer.Write(true);
+                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("DiffuseMap", out var img) ? img.Name : string.Empty));
+                writer.Write((byte)0);
+                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("NormalMap", out img) ? img.Name : string.Empty));
+                writer.Write((byte)0);
+                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("SpecularMap", out img) ? img.Name : string.Empty));
+                writer.Write((byte)0);
+            }
+        }
 
         /// <inheritdoc/>
         public override bool IsValid(Span<byte> startOfFile, Stream stream, string? filePath, string? ext)
