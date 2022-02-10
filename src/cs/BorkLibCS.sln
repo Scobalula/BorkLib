@@ -11,6 +11,8 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Sandbox", "Borks.Sand
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Graphics3D.SEModel", "Borks.Graphics3D.SEModel\Borks.Graphics3D.SEModel.csproj", "{F338255A-B3A8-4110-944F-9763E51E8485}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Borks.Graphics3D.SMD", "Borks.Graphics3D.SMD\Borks.Graphics3D.SMD.csproj", "{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -69,6 +71,18 @@ Global
 		{F338255A-B3A8-4110-944F-9763E51E8485}.Release|x64.Build.0 = Release|Any CPU
 		{F338255A-B3A8-4110-944F-9763E51E8485}.Release|x86.ActiveCfg = Release|Any CPU
 		{F338255A-B3A8-4110-944F-9763E51E8485}.Release|x86.Build.0 = Release|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Debug|x64.Build.0 = Debug|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Debug|x86.Build.0 = Debug|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Release|Any CPU.Build.0 = Release|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Release|x64.ActiveCfg = Release|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Release|x64.Build.0 = Release|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Release|x86.ActiveCfg = Release|Any CPU
+		{205246A7-ADE5-4F18-BA3A-EE57B7A398F1}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

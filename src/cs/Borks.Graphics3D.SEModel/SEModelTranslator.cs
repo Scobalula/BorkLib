@@ -138,7 +138,7 @@ namespace Borks.Graphics3D.SEModel
                 }
             }
 
-            var hasUVs = (meshDataPresence & (1 << 0)) != 0;
+            var hasUVs     = (meshDataPresence & (1 << 0)) != 0;
             var hasNormals = (meshDataPresence & (1 << 1)) != 0;
             var hasColours = (meshDataPresence & (1 << 2)) != 0;
             var hasWeights = (meshDataPresence & (1 << 3)) != 0;
@@ -215,7 +215,7 @@ namespace Borks.Graphics3D.SEModel
                 // Weights
                 if (hasWeights)
                 {
-                    mesh.Influences = new(vertexCount, influences);
+                    mesh.Influences.SetCapacity(vertexCount, influences);
 
                     for (int v = 0; v < vertexCount; v++)
                     {
@@ -353,8 +353,8 @@ namespace Borks.Graphics3D.SEModel
             {
                 var vertCount  = mesh.Positions.Count;
                 var faceCount  = mesh.Faces.Count;
-                var layerCount = mesh.UVLayers.Dimension > 0 ? 1 : mesh.UVLayers.Dimension;
-                var influences = mesh.Influences.Count > 0 ? 0 : mesh.Influences.Dimension;
+                var layerCount = mesh.UVLayers.Dimension <= 0 ? 1 : mesh.UVLayers.Dimension;
+                var influences = mesh.Influences.Count <= 0 ? 0 : mesh.Influences.Dimension;
 
                 writer.Write((byte)0); // Unused flags
 
@@ -371,7 +371,7 @@ namespace Borks.Graphics3D.SEModel
                     writer.Write(mesh.Positions[i].Z * scale);
                 }
                 // UVs
-                if(mesh.UVLayers.VertexCount == mesh.Positions.VertexCount && mesh.UVLayers.Dimension > 0)
+                if(mesh.UVLayers.ElementCount == mesh.Positions.ElementCount && mesh.UVLayers.Dimension > 0)
                 {
                     for (int i = 0; i < mesh.Positions.Count; i++)
                     {
@@ -385,10 +385,10 @@ namespace Borks.Graphics3D.SEModel
                 // Just write 0 values and let the user fix it up in other software.
                 else
                 {
-                    writer.Write(new byte[8 * mesh.Positions.VertexCount * layerCount]);
+                    writer.Write(new byte[8 * mesh.Positions.ElementCount * layerCount]);
                 }
                 // Normals
-                if (mesh.Normals.VertexCount == mesh.Positions.VertexCount && mesh.Normals.Dimension > 0)
+                if (mesh.Normals.ElementCount == mesh.Positions.ElementCount && mesh.Normals.Dimension > 0)
                 {
                     for (int i = 0; i < mesh.Positions.Count; i++)
                     {
@@ -400,10 +400,10 @@ namespace Borks.Graphics3D.SEModel
                 // Just write 0 values and let the user fix it up in other software.
                 else
                 {
-                    writer.Write(new byte[12 * mesh.Positions.VertexCount]);
+                    writer.Write(new byte[12 * mesh.Positions.ElementCount]);
                 }
                 // Colours
-                if (mesh.Colours.VertexCount == mesh.Positions.VertexCount && mesh.Colours.Dimension > 0)
+                if (mesh.Colours.ElementCount == mesh.Positions.ElementCount && mesh.Colours.Dimension > 0)
                 {
                     for (int i = 0; i < mesh.Positions.Count; i++)
                     {
@@ -416,7 +416,7 @@ namespace Borks.Graphics3D.SEModel
                 // Just write 0 values and let the user fix it up in other software.
                 else
                 {
-                    writer.Write(new byte[4 * mesh.Positions.VertexCount]);
+                    writer.Write(new byte[4 * mesh.Positions.ElementCount]);
                 }
                 // Weights
                 if (influences != 0)
@@ -470,11 +470,11 @@ namespace Borks.Graphics3D.SEModel
                 writer.Write(Encoding.ASCII.GetBytes(material.Name));
                 writer.Write((byte)0);
                 writer.Write(true);
-                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("DiffuseMap", out var img) ? img.Name : string.Empty));
+                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("DiffuseMap", out var img) ? img.FilePath : string.Empty));
                 writer.Write((byte)0);
-                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("NormalMap", out img) ? img.Name : string.Empty));
+                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("NormalMap", out img) ? img.FilePath : string.Empty));
                 writer.Write((byte)0);
-                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("SpecularMap", out img) ? img.Name : string.Empty));
+                writer.Write(Encoding.ASCII.GetBytes(material.Textures.TryGetValue("SpecularMap", out img) ? img.FilePath : string.Empty));
                 writer.Write((byte)0);
             }
         }

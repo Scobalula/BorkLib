@@ -12,24 +12,29 @@ namespace Borks.Graphics3D
     public class MeshAttributeCollection<T> : ICollection<T>, IEnumerable<T> where T : unmanaged
     {
         /// <summary>
-        /// Gets or Sets the number of vertices
+        /// Gets the number of elements.
         /// </summary>
-        public int VertexCount { get; private set; }
+        public int ElementCount => _elementCount;
 
         /// <summary>
-        /// Gets the total number of entries within the collection
-        /// </summary>
-        public int Count => _size;
-
-        /// <summary>
-        /// Gets or Sets the dimension/values per vertex
+        /// Gets or Sets the dimension.
         /// </summary>
         public int Dimension { get; private set; }
 
         /// <summary>
-        /// Gets a value indicating if this collection is read only
+        /// Gets the total number of entries within the collection independent of 
+        /// </summary>
+        public int Count => ElementCount * Dimension;
+
+        /// <summary>
+        /// Gets a value indicating if this collection is read only.
         /// </summary>
         public bool IsReadOnly => false;
+
+        /// <summary>
+        /// Gets whether or not this collection is single dimension.
+        /// </summary>
+        public bool SingleDimension { get; private set; }
 
         /// <summary>
         /// Gets or Sets the value at the given index.
@@ -38,16 +43,10 @@ namespace Borks.Graphics3D
         {
             get
             {
-                if ((uint)index >= (uint)_size)
-                    throw new ArgumentOutOfRangeException(nameof(index), "Index was outside the bounds of the collection");
-
                 return _items[index];
             }
             set
             {
-                if ((uint)index >= (uint)_size)
-                    throw new ArgumentOutOfRangeException(nameof(index), "Index was outside the bounds of the collection");
-
                 _items[index] = value;
                 _version++;
             }
@@ -56,25 +55,15 @@ namespace Borks.Graphics3D
         /// <summary>
         /// Gets or Sets the value at the given index.
         /// </summary>
-        public T this[int vertexIndex, int itemIndex]
+        public T this[int elementIndex, int itemIndex]
         {
             get
             {
-                if ((uint)vertexIndex >= (uint)VertexCount)
-                    throw new ArgumentOutOfRangeException(nameof(itemIndex), "Vertex Index was outside the bounds of the collection");
-                if ((uint)itemIndex >= (uint)Dimension)
-                    throw new ArgumentOutOfRangeException(nameof(itemIndex), "Item Index was outside the bounds of the collection");
-
-                return this[vertexIndex * Dimension + itemIndex];
+                return this[elementIndex * Dimension + itemIndex];
             }
             set
             {
-                if ((uint)vertexIndex >= (uint)VertexCount)
-                    throw new ArgumentOutOfRangeException(nameof(itemIndex), "Vertex Index was outside the bounds of the collection");
-                if ((uint)itemIndex >= (uint)Dimension)
-                    throw new ArgumentOutOfRangeException(nameof(itemIndex), "Item Index was outside the bounds of the collection");
-
-                this[vertexIndex * Dimension + itemIndex] = value;
+                this[elementIndex * Dimension + itemIndex] = value;
             }
         }
 
@@ -92,12 +81,13 @@ namespace Borks.Graphics3D
                 {
                     if (value > 0)
                     {
-                        var newItems = new T[value];
+                        var newItems = new T[value * Dimension];
                         var newCounts = new int[value];
-                        if (_size > 0)
+
+                        if (Count > 0)
                         {
-                            Array.Copy(_items, newItems, _size);
-                            Array.Copy(_countPerVertex, newCounts, _size);
+                            Array.Copy(_items, newItems, _items.Length);
+                            Array.Copy(_countPerVertex, newCounts, _countPerVertex.Length);
                         }
 
                         _items = newItems;
@@ -119,9 +109,7 @@ namespace Borks.Graphics3D
 
         private int _version;
 
-        private int _vertexIndex;
-
-        internal int _size;
+        private int _elementCount;
 
 #pragma warning disable CA1825
         private static readonly T[] s_emptyArray = new T[0];
@@ -139,7 +127,7 @@ namespace Borks.Graphics3D
         public MeshAttributeCollection()
         {
             Dimension = DefaultDimension;
-            VertexCount = 0;
+            _elementCount = 0;
 
             _items = s_emptyArray;
             _countPerVertex = s_emptyCountPerVertex;
@@ -152,8 +140,7 @@ namespace Borks.Graphics3D
         public MeshAttributeCollection(int vertexCapacity)
         {
             Dimension = DefaultDimension;
-            VertexCount = 0;
-            _size = 0;
+            _elementCount = 0;
 
             if (vertexCapacity > 0)
             {
@@ -175,8 +162,7 @@ namespace Borks.Graphics3D
         public MeshAttributeCollection(int vertexCapacity, int dimension)
         {
             Dimension = dimension;
-            VertexCount = 0;
-            _size = 0;
+            _elementCount = 0;
 
             if (vertexCapacity > 0)
             {
@@ -193,8 +179,7 @@ namespace Borks.Graphics3D
         public void SetCapacity(int vertexCapacity)
         {
             Dimension = DefaultDimension;
-            VertexCount = 0;
-            _size = 0;
+            _elementCount = 0;
 
             if (vertexCapacity > 0)
             {
@@ -211,8 +196,7 @@ namespace Borks.Graphics3D
         public void SetCapacity(int vertexCapacity, int dimension)
         {
             Dimension = dimension;
-            VertexCount = 0;
-            _size = 0;
+            _elementCount = 0;
 
             if (vertexCapacity > 0)
             {
@@ -226,65 +210,43 @@ namespace Borks.Graphics3D
             }
         }
 
-        public void Add()
-        {
-            if (_vertexIndex >= VertexCount)
-                VertexCount = _vertexIndex + 1;
-        }
-
         /// <summary>
-        /// Adds an item after the previously added item to the previous vertex
+        /// Adds an item to the end of the collection.
         /// </summary>
-        /// <param name="item">Item to add</param>
+        /// <param name="item">The item to add to the collection.</param>
         public void Add(T item)
         {
+            // Handle expansion if our index is at the count
+            if (_elementCount == _countPerVertex.Length)
+                Grow(_elementCount + 1);
+
             // Note: must get with stride
-            var index = _vertexIndex * Dimension + _countPerVertex[_vertexIndex];
-            _countPerVertex[_vertexIndex]++;
+            var index = _elementCount * Dimension + _countPerVertex[_elementCount];
 
-            // If we're outside how many items, we must expand the list
-            if ((uint)index < (uint)_items.Length)
-            {
-                _items[index] = item;
-            }
-            else
-            {
-                Grow(index + 1);
-                _items[index] = item;
-            }
+            // Now assign our item and count.
+            _items[index] = item;
+            _countPerVertex[_elementCount]++;
 
-            if (index >= _size)
-                _size = index + 1;
-            if (_countPerVertex[_vertexIndex] >= Dimension)
-                _vertexIndex++;
-            if (_vertexIndex >= VertexCount)
-                VertexCount = _vertexIndex + 1;
+            if (_countPerVertex[_elementCount] >= Dimension)
+                _elementCount++;
         }
 
         public void Add(T item, int vertexIndex)
         {
-            if ((_countPerVertex[vertexIndex] + 1) > Dimension)
-                GrowValuesPerVertex(_countPerVertex[vertexIndex] + 1);
-            if (vertexIndex >= VertexCount)
-                VertexCount = vertexIndex + 1;
+            // Handle expansion if our index is at the count
+            if (vertexIndex >= _countPerVertex.Length)
+                Grow(vertexIndex + 1);
+            if (_countPerVertex[vertexIndex] == Dimension)
+                GrowDimension(_countPerVertex[vertexIndex] + 1);
+            if (vertexIndex >= _elementCount)
+                _elementCount = vertexIndex + 1;
 
             // Note: must get with stride
             var index = vertexIndex * Dimension + _countPerVertex[vertexIndex];
-            _countPerVertex[vertexIndex]++;
 
-            // If we're outside how many items, we must expand the list
-            if ((uint)index < (uint)_items.Length)
-            {
-                _items[index] = item;
-            }
-            else
-            {
-                Grow(index + 1);
-                _items[index] = item;
-            }
-
-            // Ensure our size is correct after add, this handles growth + dimension increase
-            _size = VertexCount * Dimension;
+            // Now assign our item and count.
+            _items[index] = item;
+            _countPerVertex[_elementCount]++;
         }
 
         /// <summary>
@@ -295,34 +257,31 @@ namespace Borks.Graphics3D
         /// <param name="weightIndex">Weight Index</param>
         public void Add(T item, int vertexIndex, int weightIndex)
         {
+            // Handle expansion if our index is at the count
+            if (vertexIndex >= _countPerVertex.Length)
+                Grow(vertexIndex + 1);
             if (weightIndex >= Dimension)
-                GrowValuesPerVertex(weightIndex);
+                GrowDimension(weightIndex + 1);
+            if (vertexIndex >= _elementCount)
+                _elementCount = vertexIndex + 1;
             if (weightIndex >= _countPerVertex[vertexIndex])
-                _countPerVertex[vertexIndex] = weightIndex + 1;
-            if (vertexIndex >= VertexCount)
-                VertexCount = vertexIndex + 1;
+                _countPerVertex[vertexIndex] = weightIndex;
 
             // Note: must get with stride
-            var index = vertexIndex * Dimension + weightIndex;
+            var index = vertexIndex * Dimension + _countPerVertex[vertexIndex];
 
-            // If we're outside how many items, we must expand the list
-            if ((uint)index < (uint)_items.Length)
-            {
-                _items[index] = item;
-            }
-            else
-            {
-                Grow(index + 1);
-                _items[index] = item;
-            }
+            // Now assign our item and count.
+            _items[index] = item;
+        }
 
-            // Ensure our size is correct after add, this handles growth + dimension increase
-            _size = VertexCount * Dimension;
+        public int GetCountForElement(int elementIndex)
+        {
+            return _countPerVertex[elementIndex];
         }
 
         public void Clear()
         {
-            _size = 0;
+
         }
 
         /// <summary>
@@ -330,7 +289,7 @@ namespace Borks.Graphics3D
         /// </summary>
         /// <param name="item">Item</param>
         /// <returns>True if it exists, otherwise false</returns>
-        public bool Contains(T item) => _size != 0 && Array.IndexOf(_items, item) != -1;
+        public bool Contains(T item) => Array.IndexOf(_items, item) != -1;
 
         public void CopyTo(T[] array, int arrayIndex)
         {
@@ -338,7 +297,7 @@ namespace Borks.Graphics3D
         }
 
 
-        public int FindIndex(Predicate<T> match) => FindIndex(0, VertexCount * Dimension, match);
+        public int FindIndex(Predicate<T> match) => FindIndex(0, ElementCount * Dimension, match);
 
         public int FindIndex(int vertexIndex, Predicate<T> match) => FindIndex(vertexIndex * Dimension, Dimension, match);
 
@@ -374,20 +333,20 @@ namespace Borks.Graphics3D
         {
             Debug.Assert(_items.Length < capacity);
 
-            int nCapacity = _items.Length == 0 ? VertexCount * Dimension * DefaultCapacity : 2 * _items.Length;
+            int nCapacity = _items.Length == 0 ? DefaultCapacity : 2 * _items.Length;
 
             if (nCapacity < capacity) nCapacity = capacity;
 
             Capacity = nCapacity;
         }
 
-        private void GrowValuesPerVertex(int newValuesPerVertex)
+        private void GrowDimension(int newValuesPerVertex)
         {
-            int nValuesPerVertex = _items.Length == 0 ? VertexCount * Dimension * DefaultCapacity : 2 * _items.Length;
+            int nValuesPerVertex = _items.Length == 0 ? ElementCount * Dimension * DefaultCapacity : 2 * _items.Length;
 
-            var newItems = new T[newValuesPerVertex * VertexCount];
+            var newItems = new T[newValuesPerVertex * ElementCount];
 
-            for (int v = 0; v < VertexCount; v++)
+            for (int v = 0; v < ElementCount; v++)
             {
                 var oldOffset = v * Dimension;
                 var newOffset = v * newValuesPerVertex;
@@ -434,7 +393,7 @@ namespace Borks.Graphics3D
             {
                 var localList = _collection;
 
-                if (_version == localList._version && ((uint)_index < (uint)localList._size))
+                if (_version == localList._version && ((uint)_index < (uint)localList.Count))
                 {
                     _current = localList._items[_index];
                     _index++;
@@ -451,7 +410,7 @@ namespace Borks.Graphics3D
                 if (_version != _collection._version)
                     throw new InvalidOperationException("Collection was modified; enumeration operation may not execute.");
 
-                _index = _collection._size + 1;
+                _index = _collection.Count + 1;
                 _current = default;
                 return false;
             }

@@ -12,11 +12,6 @@ namespace Borks.Graphics3D
     public class SkeletonAnimation
     {
         /// <summary>
-        /// Gets or Sets the name of the skeleton animation.
-        /// </summary>
-        public string Name { get; set; }
-
-        /// <summary>
         /// Gets or Sets the skeleton tied to this animation, if any.
         /// </summary>
         public Skeleton? Skeleton { get; set; }
@@ -27,10 +22,20 @@ namespace Borks.Graphics3D
         public List<SkeletonAnimationTarget> Targets { get; set; }
 
 
-        public SkeletonAnimation(string name)
+        public SkeletonAnimation()
         {
-            Name = name;
             Targets = new();
+        }
+
+        public SkeletonAnimation(Skeleton skeleton)
+        {
+            Skeleton = skeleton;
+            Targets = new();
+
+            foreach (var bone in skeleton.Bones)
+            {
+                Targets.Add(new(bone.Name));
+            }
         }
     }
 }
