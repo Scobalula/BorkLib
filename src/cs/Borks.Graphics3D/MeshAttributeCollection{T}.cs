@@ -136,6 +136,32 @@ namespace Borks.Graphics3D
         /// <summary>
         /// Initializes a new instance of the <see cref="MeshAttributeCollection{T}"/> class
         /// </summary>
+        public MeshAttributeCollection(MeshAttributeCollection<T>? from)
+        {
+            if(from != null && from.Count != 0)
+            {
+                Dimension = from.Dimension;
+                _elementCount = from._elementCount;
+
+                _items = new T[from._items.Length];
+                _countPerVertex = new int[from._countPerVertex.Length];
+
+                Array.Copy(from._items, _items, _items.Length);
+                Array.Copy(from._countPerVertex, _countPerVertex, _countPerVertex.Length);
+            }
+            else
+            {
+                Dimension = DefaultDimension;
+                _elementCount = 0;
+
+                _items = s_emptyArray;
+                _countPerVertex = s_emptyCountPerVertex;
+            }
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="MeshAttributeCollection{T}"/> class
+        /// </summary>
         /// <param name="vertexCapacity">Initial vertex capacity</param>
         public MeshAttributeCollection(int vertexCapacity)
         {

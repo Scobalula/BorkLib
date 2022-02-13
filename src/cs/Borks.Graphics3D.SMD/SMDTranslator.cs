@@ -24,7 +24,7 @@ namespace Borks.Graphics3D.SMD
         public override bool SupportsWriting => true;
 
         /// <inheritdoc/>
-        public override void Read(Stream stream, Graphics3DTranslatorIO output)
+        public override void Read(Stream stream, string filePath, Graphics3DTranslatorIO output)
         {
             // Mesh lookup table
             using var reader = new StreamReader(stream, null, true, -1, true);
@@ -41,7 +41,7 @@ namespace Borks.Graphics3D.SMD
         }
 
         /// <inheritdoc/>
-        public override void Write(Stream stream, Graphics3DTranslatorIO input)
+        public override void Write(Stream stream, string filePath, Graphics3DTranslatorIO input)
         {
 
             using var writer = new StreamWriter(stream);

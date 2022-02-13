@@ -44,6 +44,21 @@ namespace Borks.Graphics3D
         Influences = 1 << 5,
 
         /// <summary>
+        /// Defines if the mesh contains delta positions (morph).
+        /// </summary>
+        DeltaPositions = 1 << 6,
+
+        /// <summary>
+        /// Defines if the mesh contains delta normals (morph).
+        /// </summary>
+        DeltaNormals = 1 << 7,
+
+        /// <summary>
+        /// Defines if the mesh contains delta tangents (morph).
+        /// </summary>
+        DeltaTangents = 1 << 8,
+
+        /// <summary>
         /// Defines if the mesh contains basic normals and uvs.
         /// </summary>
         HasBasic = Normals | UVLayers,

@@ -29,15 +29,16 @@ namespace Borks.Graphics3D.SEModel
         public override bool SupportsWriting => true;
 
         /// <inheritdoc/>
-        public override void Read(Stream stream, Graphics3DTranslatorIO output)
+        public override void Read(Stream stream, string filePath, Graphics3DTranslatorIO output)
         {
             // SEModels can only contain a single skeleton
             // and model.
             var scale = 1.0f;
             var skeleton = new Skeleton();
-            var result = new Model(skeleton);
-
-            output.Models.Add(result);
+            var result = new Model(skeleton)
+            {
+                Name = Path.GetFileNameWithoutExtension(filePath)
+            };
 
             using var reader = new BinaryReader(stream, Encoding.Default, true);
 
@@ -158,6 +159,8 @@ namespace Borks.Graphics3D.SEModel
                 var influences = reader.ReadByte();
                 var vertexCount = reader.ReadInt32();
                 var faceCount = reader.ReadInt32();
+
+                Console.WriteLine(vertexCount);
 
                 var mesh = new Mesh();
 
@@ -285,12 +288,16 @@ namespace Borks.Graphics3D.SEModel
                 foreach (var index in materialIndices[i])
                     result.Meshes[i].Materials.Add(result.Materials[index]);
             }
+
+            output.Models.Add(result);
         }
 
         /// <inheritdoc/>
-        public override void Write(Stream stream, Graphics3DTranslatorIO input)
+        public override void Write(Stream stream, string filePath, Graphics3DTranslatorIO input)
         {
             var data = input.Models.First();
+            var skeleton = data.Skeleton;
+            var boneCount = skeleton != null ? skeleton.Bones.Count : 0;
             var scale = 1.0f;
 
             using var writer = new BinaryWriter(stream, Encoding.Default, true);
@@ -301,52 +308,53 @@ namespace Borks.Graphics3D.SEModel
             writer.Write((byte)0x7); // Data Presence
             writer.Write((byte)0x7); // Bone Data Presence
             writer.Write((byte)0xF); // Mesh Data Presence
-            writer.Write(data.Skeleton.Bones.Count);
+            writer.Write(boneCount);
             writer.Write(data.Meshes.Count);
             writer.Write(data.Materials.Count);
             writer.Write((byte)0);
             writer.Write((byte)0);
             writer.Write((byte)0);
 
-            var indexTable = new int[data.Skeleton.Bones.Count];
-
-            for (int i = 0; i < data.Skeleton.Bones.Count; i++)
+            if (skeleton != null)
             {
-                writer.Write(Encoding.ASCII.GetBytes(data.Skeleton.Bones[i].Name));
-                writer.Write((byte)0);
-            }
+                for (int i = 0; i < skeleton.Bones.Count; i++)
+                {
+                    writer.Write(Encoding.ASCII.GetBytes(skeleton.Bones[i].Name));
+                    writer.Write((byte)0);
+                }
 
-            foreach(var bone in data.Skeleton.Bones)
-            {
-                writer.Write((byte)0); // Unused flags
+                foreach (var bone in skeleton.Bones)
+                {
+                    writer.Write((byte)0); // Unused flags
 
-                writer.Write(bone.Parent == null ? -1 : data.Skeleton.Bones.IndexOf(bone.Parent));
+                    writer.Write(bone.Parent == null ? -1 : skeleton.Bones.IndexOf(bone.Parent));
 
-                var wt = bone.GlobalPosition;
-                var wr = bone.GlobalRotation;
-                var lt = bone.LocalPosition;
-                var lr = bone.LocalRotation;
-                var s = Vector3.One;
+                    var wt = bone.GlobalPosition;
+                    var wr = bone.GlobalRotation;
+                    var lt = bone.LocalPosition;
+                    var lr = bone.LocalRotation;
+                    var s = Vector3.One;
 
-                writer.Write(wt.X * scale);
-                writer.Write(wt.Y * scale);
-                writer.Write(wt.Z * scale);
-                writer.Write(wr.X);
-                writer.Write(wr.Y);
-                writer.Write(wr.Z);
-                writer.Write(wr.W);
+                    writer.Write(wt.X * scale);
+                    writer.Write(wt.Y * scale);
+                    writer.Write(wt.Z * scale);
+                    writer.Write(wr.X);
+                    writer.Write(wr.Y);
+                    writer.Write(wr.Z);
+                    writer.Write(wr.W);
 
-                writer.Write(lt.X * scale);
-                writer.Write(lt.Y * scale);
-                writer.Write(lt.Z * scale);
-                writer.Write(lr.X);
-                writer.Write(lr.Y);
-                writer.Write(lr.Z);
-                writer.Write(lr.W);
+                    writer.Write(lt.X * scale);
+                    writer.Write(lt.Y * scale);
+                    writer.Write(lt.Z * scale);
+                    writer.Write(lr.X);
+                    writer.Write(lr.Y);
+                    writer.Write(lr.Z);
+                    writer.Write(lr.W);
 
-                writer.Write(s.X);
-                writer.Write(s.Y);
-                writer.Write(s.Z);
+                    writer.Write(s.X);
+                    writer.Write(s.Y);
+                    writer.Write(s.Z);
+                }
             }
 
             foreach (var mesh in data.Meshes)
@@ -354,7 +362,7 @@ namespace Borks.Graphics3D.SEModel
                 var vertCount  = mesh.Positions.Count;
                 var faceCount  = mesh.Faces.Count;
                 var layerCount = mesh.UVLayers.Dimension <= 0 ? 1 : mesh.UVLayers.Dimension;
-                var influences = mesh.Influences.Count <= 0 ? 0 : mesh.Influences.Dimension;
+                var influences = mesh.Influences.Dimension <= 0 || boneCount <= 0 ? 0 : mesh.Influences.Dimension;
 
                 writer.Write((byte)0); // Unused flags
 
@@ -419,7 +427,7 @@ namespace Borks.Graphics3D.SEModel
                     writer.Write(new byte[4 * mesh.Positions.ElementCount]);
                 }
                 // Weights
-                if (influences != 0)
+                if (influences != 0 && boneCount > 0)
                 {
                     for (int i = 0; i < mesh.Positions.Count; i++)
                     {
@@ -427,9 +435,9 @@ namespace Borks.Graphics3D.SEModel
                         {
                             var (index, value) = mesh.Influences[i, w];
 
-                            if (data.Skeleton.Bones.Count <= 0xFF)
+                            if (boneCount <= 0xFF)
                                 writer.Write((byte)index);
-                            else if (data.Skeleton.Bones.Count <= 0xFFFF)
+                            else if (boneCount <= 0xFFFF)
                                 writer.Write((ushort)index);
                             else
                                 writer.Write(index);

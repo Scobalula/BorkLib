@@ -12,9 +12,19 @@ namespace Borks.Graphics3D
     public class Model
     {
         /// <summary>
+        /// Gets or Sets the name of the model.
+        /// </summary>
+        public string? Name { get; set; }
+
+        /// <summary>
         /// Get or Sets the skeleton this model uses.
         /// </summary>
-        public Skeleton Skeleton { get; set; }
+        public Skeleton? Skeleton { get; set; }
+
+        /// <summary>
+        /// Get or Sets the morph this model uses.
+        /// </summary>
+        public Morph? Morph { get; set; }
 
         /// <summary>
         /// Gets or Sets the meshes stored within this model.
@@ -29,14 +39,21 @@ namespace Borks.Graphics3D
 
         public Model()
         {
-            Skeleton = new();
             Meshes = new();
             Materials = new();
         }
 
-        public Model(Skeleton skeleton)
+        public Model(Skeleton? skeleton)
         {
             Skeleton = skeleton;
+            Meshes = new();
+            Materials = new();
+        }
+
+        public Model(Skeleton? skeleton, Morph? morph)
+        {
+            Skeleton = skeleton;
+            Morph = morph;
             Meshes = new();
             Materials = new();
         }

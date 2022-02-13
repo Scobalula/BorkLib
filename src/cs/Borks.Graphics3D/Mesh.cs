@@ -4,7 +4,7 @@ using System.Numerics;
 namespace Borks.Graphics3D
 {
     /// <summary>
-    /// A class to hold a 3-D Mesh with optional attributes.
+    /// A class to hold a 3D Mesh with optional attributes.
     /// </summary>
     public class Mesh
     {
@@ -39,9 +39,24 @@ namespace Borks.Graphics3D
         public MeshAttributeCollection<Vector2> UVLayers { get; set; }
 
         /// <summary>
-        /// Gets or Sets the Bone Weights
+        /// Gets or Sets the influences for use in skeletal animation. The index points to the skeleton bone in the main model that owns this mesh.
         /// </summary>
         public MeshAttributeCollection<(int, float)> Influences { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the delta positions for use in morph animations. The index points to the morph target in the main model that owns this mesh.
+        /// </summary>
+        public MeshAttributeCollection<(int, Vector3)> DeltaPositions { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the delta normals for use in morph animations. The index points to the morph target in the main model that owns this mesh.
+        /// </summary>
+        public MeshAttributeCollection<(int, Vector3)> DeltaNormals { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the delta tangents for use in morph animations. The index points to the morph target in the main model that owns this mesh.
+        /// </summary>
+        public MeshAttributeCollection<(int, Vector3)> DeltaTangents { get; set; }
 
         /// <summary>
         /// Gets or Sets the materials assigned to this mesh.
@@ -58,15 +73,37 @@ namespace Borks.Graphics3D
         /// </summary>
         public Mesh()
         {
-            Positions  = new();
-            Faces      = new();
-            Normals    = new();
-            Tangents   = new();
-            BiTangents = new();
-            Colours    = new();
-            UVLayers   = new();
-            Influences = new();
-            Materials  = new();
+            Positions      = new();
+            Faces          = new();
+            Normals        = new();
+            Tangents       = new();
+            BiTangents     = new();
+            Colours        = new();
+            UVLayers       = new();
+            Influences     = new();
+            Materials      = new();
+            DeltaPositions = new();
+            DeltaNormals   = new();
+            DeltaTangents  = new();
+        }
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Mesh"/> class.
+        /// </summary>
+        public Mesh(Mesh from)
+        {
+            Positions      = new(from.Positions);
+            Faces          = new(from.Faces);
+            Normals        = new(from.Normals);
+            Tangents       = new(from.Tangents);
+            BiTangents     = new(from.BiTangents);
+            Colours        = new(from.Colours);
+            UVLayers       = new(from.UVLayers);
+            Influences     = new(from.Influences);
+            Materials      = new(from.Materials);
+            DeltaPositions = new(from.DeltaPositions);
+            DeltaNormals   = new(from.DeltaNormals);
+            DeltaTangents  = new(from.DeltaTangents);
         }
 
         /// <summary>
@@ -76,22 +113,26 @@ namespace Borks.Graphics3D
         /// <param name="faceCount">Number of faces this mesh contains.</param>
         /// <param name="uvLayers">Number of UV Layers, if none, set to 0.</param>
         /// <param name="influences">Number of influences, if none, set to 0.</param>
+        /// <param name="morphs">Number of morph targets, if none, set to 0.</param>
         /// <param name="flags">The <see cref="MeshAttributeFlags>"/> that define what data to allocate.</param>
-        public Mesh(int vertexCount, int faceCount, int uvLayers, int influences, MeshAttributeFlags flags)
+        public Mesh(int vertexCount, int faceCount, int uvLayers, int influences, int morphs, MeshAttributeFlags flags)
         {
             // At the very least we need positions and faces
             // for a polygon mesh.
-            Positions   = new(vertexCount);
-            Faces       = new(faceCount);
-            Positions   = new();
-            Faces       = new();
-            Normals     = new();
-            Tangents    = new();
-            BiTangents  = new();
-            Colours     = new();
-            UVLayers    = new();
-            Influences  = new();
-            Materials   = new();
+            Positions      = new(vertexCount);
+            Faces          = new(faceCount);
+            Positions      = new();
+            Faces          = new();
+            Normals        = new();
+            Tangents       = new();
+            BiTangents     = new();
+            Colours        = new();
+            UVLayers       = new();
+            Influences     = new();
+            Materials      = new();
+            DeltaPositions = new();
+            DeltaNormals   = new();
+            DeltaTangents  = new();
 
             if (flags.HasFlag(MeshAttributeFlags.Normals))
                 Normals.SetCapacity(vertexCount);
@@ -105,6 +146,12 @@ namespace Borks.Graphics3D
                 UVLayers.SetCapacity(vertexCount, uvLayers);
             if (flags.HasFlag(MeshAttributeFlags.Influences))
                 Influences.SetCapacity(vertexCount, influences);
+            if (flags.HasFlag(MeshAttributeFlags.DeltaPositions))
+                DeltaPositions.SetCapacity(vertexCount, morphs);
+            if (flags.HasFlag(MeshAttributeFlags.DeltaNormals))
+                DeltaNormals.SetCapacity(vertexCount, morphs);
+            if (flags.HasFlag(MeshAttributeFlags.DeltaTangents))
+                DeltaTangents.SetCapacity(vertexCount, morphs);
         }
     }
 }

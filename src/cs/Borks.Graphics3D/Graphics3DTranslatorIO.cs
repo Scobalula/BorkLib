@@ -65,9 +65,9 @@ namespace Borks.Graphics3D
                 return true;
             }
             // Check for it in models
-            if(Models.Count > 0)
+            if(Models.Count > 0 && Models[0].Skeleton != null)
             {
-                skeleton = Models[0].Skeleton;
+                skeleton = Models[0].Skeleton!;
                 return true;
             }
             // Check for it in animations

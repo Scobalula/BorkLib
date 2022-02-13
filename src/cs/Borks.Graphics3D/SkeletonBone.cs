@@ -23,6 +23,11 @@ namespace Borks.Graphics3D
         public string Name { get; set; }
 
         /// <summary>
+        /// Gets or Sets the index of the bone within the <see cref="Skeleton"/>.
+        /// </summary>
+        public int Index { get; set; }
+
+        /// <summary>
         /// Gets or Sets the parent of this bone.
         /// </summary>
         public SkeletonBone? Parent
@@ -73,6 +78,99 @@ namespace Borks.Graphics3D
         {
             Name = name;
             Children = new();
+        }
+
+        /// <summary>
+        /// Checks if this bone is a descendant of the given bone.
+        /// </summary>
+        /// <param name="bone">Parent to check for.</param>
+        /// <returns>True if it is, otherwise false.</returns>
+        public bool IsDescendantOf(SkeletonBone? bone)
+        {
+            if (bone == null)
+                return false;
+
+            var current = Parent;
+
+            while (current is not null)
+            {
+                if (current == bone)
+                    return true;
+
+                current = current.Parent;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Checks if this bone is a descendant of the given bone by name.
+        /// </summary>
+        /// <param name="boneName">Name to check for.</param>
+        /// <returns>True if it is, otherwise false.</returns>
+        public bool IsDescendantOf(string? boneName) =>
+            IsDescendantOf(boneName, StringComparison.CurrentCulture);
+
+        /// <summary>
+        /// Checks if this bone is a descendant of the given bone by name.
+        /// </summary>
+        /// <param name="boneName">Name to check for.</param>
+        /// <param name="comparisonType">One of the enumeration values that specifies how the strings will be compared.</param>
+        /// <returns>True if it is, otherwise false.</returns>
+        public bool IsDescendantOf(string? boneName, StringComparison comparisonType)
+        {
+            if (string.IsNullOrWhiteSpace(boneName))
+                return false;
+            var current = Parent;
+
+            while (current is not null)
+            {
+                if (current.Name.Equals(boneName, comparisonType))
+                    return true;
+
+                current = current.Parent;
+            }
+
+            return false;
+        }
+
+        public void GenerateLocalTransform()
+        {
+            if (Parent != null)
+            {
+                LocalRotation = Quaternion.Conjugate(Parent.GlobalRotation) * GlobalRotation;
+                LocalPosition = Vector3.Transform(GlobalPosition - Parent.GlobalPosition, Quaternion.Conjugate(Parent.GlobalRotation));
+            }
+            else
+            {
+                LocalPosition = GlobalPosition;
+                LocalRotation = GlobalRotation;
+            }
+        }
+
+        public void GenerateGlobalTransform()
+        {
+            if (Parent != null)
+            {
+                GlobalRotation = Parent.GlobalRotation * LocalRotation;
+                GlobalPosition = Vector3.Transform(LocalPosition, Parent.GlobalRotation) + Parent.GlobalPosition;
+            }
+            else
+            {
+                GlobalPosition = LocalPosition;
+                GlobalRotation = LocalRotation;
+            }
+        }
+
+        public IEnumerable<SkeletonBone> EnumerateParents()
+        {
+            var parent = Parent;
+
+            while (parent != null)
+            {
+                yield return parent;
+                parent = parent.Parent;
+            }
         }
     }
 }
