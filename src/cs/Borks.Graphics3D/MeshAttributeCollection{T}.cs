@@ -262,17 +262,17 @@ namespace Borks.Graphics3D
             // Handle expansion if our index is at the count
             if (vertexIndex >= _countPerVertex.Length)
                 Grow(vertexIndex + 1);
-            if (_countPerVertex[vertexIndex] == Dimension)
+            if (_countPerVertex[vertexIndex] >= Dimension)
                 GrowDimension(_countPerVertex[vertexIndex] + 1);
             if (vertexIndex >= _elementCount)
                 _elementCount = vertexIndex + 1;
 
             // Note: must get with stride
             var index = vertexIndex * Dimension + _countPerVertex[vertexIndex];
-
+            var test = _countPerVertex[vertexIndex];
             // Now assign our item and count.
             _items[index] = item;
-            _countPerVertex[_elementCount]++;
+            _countPerVertex[vertexIndex]++;
         }
 
         /// <summary>
@@ -368,9 +368,9 @@ namespace Borks.Graphics3D
 
         private void GrowDimension(int newValuesPerVertex)
         {
-            int nValuesPerVertex = _items.Length == 0 ? ElementCount * Dimension * DefaultCapacity : 2 * _items.Length;
+            int nValuesPerVertex = Dimension == 0 ? ElementCount * Dimension * DefaultCapacity : 2 * _items.Length;
 
-            var newItems = new T[newValuesPerVertex * ElementCount];
+            var newItems = new T[newValuesPerVertex * _countPerVertex.Length];
 
             for (int v = 0; v < ElementCount; v++)
             {
@@ -382,6 +382,9 @@ namespace Borks.Graphics3D
                     newItems[newOffset + w] = _items[oldOffset + w];
                 }
             }
+
+            _items = newItems;
+            Dimension = newValuesPerVertex;
         }
         #endregion
 

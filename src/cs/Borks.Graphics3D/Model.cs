@@ -57,5 +57,13 @@ namespace Borks.Graphics3D
             Meshes = new();
             Materials = new();
         }
+
+        /// <summary>
+        /// Assigns the bone indices based off their index within the table. 
+        /// </summary>
+        public void AssignSkeletonBoneIndices()
+        {
+            Skeleton?.AssignBoneIndices();
+        }
     }
 }

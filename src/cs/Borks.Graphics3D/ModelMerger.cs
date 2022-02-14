@@ -248,6 +248,9 @@ namespace Borks.Graphics3D
                 if (!reloop)
                     break;
             }
+
+            // Ensure our indices assigned to bones are correct
+            root.AssignSkeletonBoneIndices();
         }
     }
 }

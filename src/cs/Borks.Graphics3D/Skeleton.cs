@@ -96,5 +96,16 @@ namespace Borks.Graphics3D
                 bone.GenerateGlobalTransform();
             }
         }
+
+        /// <summary>
+        /// Assigns the bone indices based off their index within the table. 
+        /// </summary>
+        public void AssignBoneIndices()
+        {
+            for (int i = 0; i < Bones.Count; i++)
+            {
+                Bones[i].Index = i;
+            }
+        }
     }
 }

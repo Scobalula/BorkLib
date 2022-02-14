@@ -82,7 +82,10 @@ namespace Borks.Graphics3D.SEModel
 
                 boneParents[i] = reader.ReadInt32();
 
-                var bone = new SkeletonBone(boneNames[i]);
+                var bone = new SkeletonBone(boneNames[i])
+                {
+                    Index = i
+                };
 
                 if (hasWorldTransforms)
                 {
