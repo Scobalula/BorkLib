@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Borks.Graphics3D.SEAnim\Borks.Graphics3D.SEAnim.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.SEModel\Borks.Graphics3D.SEModel.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.SMD\Borks.Graphics3D.SMD.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D\Borks.Graphics3D.csproj" />

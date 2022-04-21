@@ -13,19 +13,39 @@ namespace Borks.Graphics3D
         public string BoneName { get; set; }
 
         /// <summary>
-        /// Gets or Sets the Translation Frames
+        /// Gets or Sets the translation frames.
         /// </summary>
         public List<AnimationFrame<Vector3>>? TranslationFrames { get; set; }
 
         /// <summary>
-        /// Gets or Sets the Rotation Frames
+        /// Gets or Sets the rotation frames.
         /// </summary>
         public List<AnimationFrame<Quaternion>>? RotationFrames { get; set; }
 
         /// <summary>
-        /// Gets or Sets the Translation Frames
+        /// Gets or Sets the scale frames.
         /// </summary>
         public List<AnimationFrame<Vector3>>? ScaleFrames { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the transform type for this bone.
+        /// </summary>
+        public TransformType TransformType { get; set; }
+
+        /// <summary>
+        /// Gets the number of translations frames.
+        /// </summary>
+        public int TranslationFrameCount => TranslationFrames != null ? TranslationFrames.Count : 0;
+
+        /// <summary>
+        /// Gets the number of rotation frames.
+        /// </summary>
+        public int RotationFrameCount => RotationFrames != null ? RotationFrames.Count : 0;
+
+        /// <summary>
+        /// Gets the number of scale frames.
+        /// </summary>
+        public int ScaleFrameCount => ScaleFrames != null ? ScaleFrames.Count : 0;
 
         /// <summary>
         /// Initializes a new instance of the <see cref="SkeletonAnimationTarget"/> class with the provided data.
@@ -34,6 +54,7 @@ namespace Borks.Graphics3D
         public SkeletonAnimationTarget(string boneName)
         {
             BoneName = boneName;
+            TransformType = TransformType.Parent;
         }
     }
 }

@@ -40,14 +40,17 @@ namespace Borks.Graphics3D.SMD
 
             return result;
         }
+
         /// <summary>
         /// Reads the nodes from the provided <see cref="SMDReader"/>.
         /// </summary>
         public static void ReadNodes(SMDReader reader, Skeleton skeleton)
         {
+            var bones = new List<SkeletonBone>();
+            var boneIDs = new List<int>();
             var boneParents = new List<int>();
 
-            while(true)
+            while (true)
             {
                 var token = reader.Parse();
 
@@ -55,18 +58,25 @@ namespace Borks.Graphics3D.SMD
                     break;
                 if (token.Length == 0)
                     break;
-                
-                // TODO: According to Valve Wiki
+
+                // According to Valve Wiki
                 // this isn't sequential, but all
-                // files I've ran into are, so until
-                // we hit a file that isn't, leaving it
-                // like this.
+                // files I've ran into are, but with this 
+                // in mind, we will do this
                 var id = int.Parse(token);
                 var name = reader.Parse();
                 var parentID = int.Parse(reader.Parse());
 
-                skeleton.Bones.Add(new(new(name)));
+                bones.Add(new(new(name)));
+                boneIDs.Add(id);
                 boneParents.Add(parentID);
+                skeleton.Bones.Add(null!);
+            }
+
+            // Now assign based off ID
+            for (int i = 0; i < boneIDs.Count; i++)
+            {
+                skeleton.Bones[boneIDs[i]] = bones[i];
             }
 
             for (int i = 0; i < boneParents.Count; i++)
@@ -105,16 +115,37 @@ namespace Borks.Graphics3D.SMD
                 // If we are above time 0, ensure our animation is created
                 if (currentTime > 0 && animation == null)
                 {
+                    // Assume a relative animation, SMD has no indicator of type.
                     animation = new(skeleton);
+                    animation.SkeletonAnimation!.TransformType = TransformType.Relative;
+
+                    foreach (var bone in skeleton.Bones)
+                    {
+                        var target = new SkeletonAnimationTarget(bone.Name)
+                        {
+                            // Set the first frame to our bone's base
+                            TranslationFrames = new()
+                            {
+                                new(0, bone.LocalPosition)
+                            },
+                            RotationFrames = new()
+                            {
+                                new(0, bone.LocalRotation)
+                            }
+                        };
+
+                        animation.SkeletonAnimation!.Targets.Add(target);
+
+                    }
                 }
 
                 var boneID = int.Parse(token);
-                var posX = float.Parse(reader.Parse());
-                var posY= float.Parse(reader.Parse());
-                var posZ = float.Parse(reader.Parse());
-                var rotX = float.Parse(reader.Parse());
-                var rotY = float.Parse(reader.Parse());
-                var rotZ = float.Parse(reader.Parse());
+                var posX   = float.Parse(reader.Parse());
+                var posY   = float.Parse(reader.Parse());
+                var posZ   = float.Parse(reader.Parse());
+                var rotX   = float.Parse(reader.Parse());
+                var rotY   = float.Parse(reader.Parse());
+                var rotZ   = float.Parse(reader.Parse());
 
                 // Convert to matrix then to quat
                 // TODO: Use direct to Quat
@@ -127,7 +158,8 @@ namespace Borks.Graphics3D.SMD
                 // Either add to our animation, or add to our skeleton if we're time 0.
                 if (currentTime > 0)
                 {
-                    // TODO
+                    animation!.SkeletonAnimation!.Targets[boneID].TranslationFrames!.Add(new(currentTime, position));
+                    animation!.SkeletonAnimation!.Targets[boneID].RotationFrames!.Add(new(currentTime, toQuat));
                 }
                 else
                 {
@@ -146,14 +178,14 @@ namespace Borks.Graphics3D.SMD
             var idx = mesh.Positions.Count;
 
             var parentBone = int.Parse(reader.Parse());
-            var posX = float.Parse(reader.Parse(false));
-            var posY = float.Parse(reader.Parse(false));
-            var posZ = float.Parse(reader.Parse(false));
-            var norX = float.Parse(reader.Parse(false));
-            var norY = float.Parse(reader.Parse(false));
-            var norZ = float.Parse(reader.Parse(false));
-            var uvX = float.Parse(reader.Parse(false));
-            var uvY = float.Parse(reader.Parse(false));
+            var posX       = float.Parse(reader.Parse(false));
+            var posY       = float.Parse(reader.Parse(false));
+            var posZ       = float.Parse(reader.Parse(false));
+            var norX       = float.Parse(reader.Parse(false));
+            var norY       = float.Parse(reader.Parse(false));
+            var norZ       = float.Parse(reader.Parse(false));
+            var uvX        = float.Parse(reader.Parse(false));
+            var uvY        = float.Parse(reader.Parse(false));
 
             mesh.Positions.Add(new(posX, posY, posZ));
             mesh.Normals.Add(Vector3.Normalize(new(norX, norY, norZ)));

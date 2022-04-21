@@ -21,5 +21,11 @@ namespace Borks.Graphics3D
         /// Gets or Sets the 
         /// </summary>
         public T Value { get; set; }
+
+        public AnimationFrame(float time, T value)
+        {
+            Time = time;
+            Value = value;
+        }
     }
 }

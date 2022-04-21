@@ -8,13 +8,14 @@ namespace Borks.Sandbox
     {
         public static void Main(string[] args)
         {
-            var marven = new SMDTranslator();
-            var dave = new SEAnim();
+            var smdTranslator     = new SMDTranslator();
+            var seanimTranslator  = new SEAnimTranslator();
+            var semodelTranslator = new SEModelTranslator();
+
             var output = new Graphics3DTranslatorIO();
 
-            marven.Read(@"D:\output\tank_reference.smd", output);
-
-            dave.Write(@"D:\output\tank_reference.semodel", output);
+            smdTranslator.Read(@"C:\Users\Admin\Documents\nigerion\anims\vm_ar_g3a3_reload_empty.smd", output);
+            seanimTranslator.Write(@"C:\Users\Admin\Documents\nigerion\anims\vm_ar_g3a3_reload_empty.seanim", output);
 
         }
     }

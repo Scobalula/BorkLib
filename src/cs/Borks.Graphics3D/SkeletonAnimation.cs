@@ -21,21 +21,28 @@ namespace Borks.Graphics3D
         /// </summary>
         public List<SkeletonAnimationTarget> Targets { get; set; }
 
+        /// <summary>
+        /// Gets or Sets the transform type.
+        /// </summary>
+        public TransformType TransformType { get; set; }
 
         public SkeletonAnimation()
         {
             Targets = new();
+            TransformType = TransformType.Unknown;
         }
 
         public SkeletonAnimation(Skeleton skeleton)
         {
             Skeleton = skeleton;
             Targets = new();
+        }
 
-            foreach (var bone in skeleton.Bones)
-            {
-                Targets.Add(new(bone.Name));
-            }
+        public SkeletonAnimation(Skeleton skeleton, TransformType type)
+        {
+            Skeleton = skeleton;
+            Targets = new();
+            TransformType = type;
         }
     }
 }

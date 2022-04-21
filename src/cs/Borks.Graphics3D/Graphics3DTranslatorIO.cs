@@ -28,6 +28,11 @@ namespace Borks.Graphics3D
         public List<Animation> Animations { get; set; }
 
         /// <summary>
+        /// Gets or Sets the scale to apply on export if supported by the translator.
+        /// </summary>
+        public float Scale { get; set; }
+
+        /// <summary>
         /// Initializes a new instance of the <see cref="Graphics3DTranslatorIO"/> class.
         /// </summary>
         public Graphics3DTranslatorIO()
@@ -35,6 +40,7 @@ namespace Borks.Graphics3D
             Models = new();
             Animations = new();
             Skeletons = new();
+            Scale = 1.0f;
         }
 
         /// <summary>
@@ -45,6 +51,7 @@ namespace Borks.Graphics3D
             Models = new();
             Animations = new();
             Skeletons = new();
+            Scale = 1.0f;
 
             Models.Add(model);
         }

@@ -9,9 +9,9 @@ namespace Borks.Graphics3D.SEModel
     public sealed class SEAnimTranslator : Graphics3DTranslator
     {
         /// <summary>
-        /// SEModel Magic
+        /// SEAnim Magic
         /// </summary>
-        public static readonly byte[] Magic = { 0x53, 0x45, 0x4D, 0x6F, 0x64, 0x65, 0x6C };
+        public static readonly byte[] Magic = { 0x53, 0x45, 0x41, 0x6E, 0x69, 0x6D };
 
         /// <inheritdoc/>
         public override string Name => "SEAnimTranslator";
@@ -301,180 +301,200 @@ namespace Borks.Graphics3D.SEModel
             // Determine bones with different types
             var boneModifiers = new Dictionary<int, byte>();
 
-            var data = input.Animations.First().SkeletonAnimation!;
+            var data = input.Animations.First();
             var frameCount = data.GetAnimationFrameCount();
+            var targetCount = data.SkeletalTargetCount;
             int index = 0;
 
-            //foreach (var bone in data.Bones)
-            //{
-            //    if (bone.TransformType != AnimationTransformType.Parent && bone.TransformType != data.TransformType)
-            //    {
-            //        // Convert to SEAnim Type
-            //        switch (bone.TransformType)
-            //        {
-            //            case AnimationTransformType.Absolute: boneModifiers[index] = 0; break;
-            //            case AnimationTransformType.Additive: boneModifiers[index] = 1; break;
-            //            case AnimationTransformType.Relative: boneModifiers[index] = 2; break;
-            //        }
-            //    }
+            if(data.SkeletonAnimation != null)
+            {
+                var animationType = data.SkeletalTransformType;
 
-            //    index++;
-            //}
+                foreach (var bone in data.SkeletonAnimation.Targets)
+                {
+                    if (bone.TransformType != TransformType.Parent && bone.TransformType != animationType)
+                    {
+                        // Convert to SEAnim Type
+                        switch (bone.TransformType)
+                        {
+                            case TransformType.Absolute: boneModifiers[index] = 0; break;
+                            case TransformType.Additive: boneModifiers[index] = 1; break;
+                            case TransformType.Relative: boneModifiers[index] = 2; break;
+                        }
+                    }
+
+                    index++;
+                }
+            }
 
             using var writer = new BinaryWriter(stream);
 
-            writer.Write(SEAnimMagic);
+            writer.Write(Magic);
             writer.Write((ushort)0x1);
             writer.Write((ushort)0x1C);
 
             // Convert to SEAnim Type
-            switch (data.TransformType)
+            switch (data.SkeletalTransformType)
             {
-                case AnimationTransformType.Absolute: writer.Write((byte)0); break;
-                case AnimationTransformType.Additive: writer.Write((byte)1); break;
-                case AnimationTransformType.Relative: writer.Write((byte)2); break;
+                case TransformType.Absolute: writer.Write((byte)1); break;
+                case TransformType.Additive: writer.Write((byte)2); break;
+                default: writer.Write((byte)0); break;
             }
 
             writer.Write((byte)0);
 
             byte flags = 0;
 
-            if (data.ContainsTranslationKeys)
+            if (data.HasSkeletalTranslationFrames())
                 flags |= 1;
-            if (data.ContainsRotationKeys)
+            if (data.HasSkeletalRotationFrames())
                 flags |= 2;
-            if (data.ContainsScaleKeys)
+            if (data.HasSkeletalScalesFrames())
                 flags |= 4;
-            if (data.Notifications.Count > 0)
-                flags |= 64;
+            //if (data.Notifications.Count > 0)
+            //    flags |= 64;
 
             writer.Write(flags);
             writer.Write((byte)0);
             writer.Write((ushort)0);
             writer.Write(data.Framerate);
             writer.Write((int)frameCount);
-            writer.Write(data.Bones.Count);
+            writer.Write(targetCount);
             writer.Write((byte)boneModifiers.Count);
             writer.Write((byte)0);
             writer.Write((ushort)0);
-            writer.Write(data.GetNotificationFrameCount());
+            // writer.Write(data.GetNotificationFrameCount());
+            writer.Write(0);
 
-            foreach (var bone in data.Bones)
+            if (data.SkeletonAnimation != null)
             {
-                writer.Write(Encoding.UTF8.GetBytes(bone.Name));
-                writer.Write((byte)0);
-            }
+                var targets = data.SkeletonAnimation.Targets;
 
-            foreach (var modifier in boneModifiers)
-            {
-                if (data.Bones.Count <= 0xFF)
-                    writer.Write((byte)modifier.Key);
-                else if (data.Bones.Count <= 0xFFFF)
-                    writer.Write((ushort)modifier.Key);
-                else
-                    throw new NotSupportedException();
-
-                writer.Write(modifier.Value);
-            }
-
-            foreach (var bone in data.Bones)
-            {
-                writer.Write((byte)0);
-
-                // TranslationFrames
-                if ((flags & 1) != 0)
+                foreach (var bone in targets)
                 {
-                    if (frameCount <= 0xFF)
-                        writer.Write((byte)bone.TranslationFrames.Count);
-                    else if (frameCount <= 0xFFFF)
-                        writer.Write((ushort)bone.TranslationFrames.Count);
-                    else
-                        writer.Write(bone.TranslationFrames.Count);
-
-                    foreach (var frame in bone.TranslationFrames)
-                    {
-                        if (frameCount <= 0xFF)
-                            writer.Write((byte)frame.Time);
-                        else if (frameCount <= 0xFFFF)
-                            writer.Write((ushort)frame.Time);
-                        else
-                            writer.Write((int)frame.Time);
-
-                        writer.Write(frame.Data.X * scale);
-                        writer.Write(frame.Data.Y * scale);
-                        writer.Write(frame.Data.Z * scale);
-                    }
-                }
-
-                // RotationFrames
-                if ((flags & 2) != 0)
-                {
-                    if (frameCount <= 0xFF)
-                        writer.Write((byte)bone.RotationFrames.Count);
-                    else if (frameCount <= 0xFFFF)
-                        writer.Write((ushort)bone.RotationFrames.Count);
-                    else
-                        writer.Write(bone.RotationFrames.Count);
-
-                    foreach (var frame in bone.RotationFrames)
-                    {
-                        if (frameCount <= 0xFF)
-                            writer.Write((byte)frame.Time);
-                        else if (frameCount <= 0xFFFF)
-                            writer.Write((ushort)frame.Time);
-                        else
-                            writer.Write((int)frame.Time);
-
-                        writer.Write(frame.Data.X);
-                        writer.Write(frame.Data.Y);
-                        writer.Write(frame.Data.Z);
-                        writer.Write(frame.Data.W);
-                    }
-                }
-
-                // ScaleFrames
-                if ((flags & 4) != 0)
-                {
-                    if (frameCount <= 0xFF)
-                        writer.Write((byte)bone.ScaleFrames.Count);
-                    else if (frameCount <= 0xFFFF)
-                        writer.Write((ushort)bone.ScaleFrames.Count);
-                    else
-                        writer.Write(bone.ScaleFrames.Count);
-
-                    foreach (var frame in bone.ScaleFrames)
-                    {
-                        if (frameCount <= 0xFF)
-                            writer.Write((byte)frame.Time);
-                        else if (frameCount <= 0xFFFF)
-                            writer.Write((ushort)frame.Time);
-                        else
-                            writer.Write((int)frame.Time);
-
-                        writer.Write(frame.Data.X);
-                        writer.Write(frame.Data.Y);
-                        writer.Write(frame.Data.Z);
-                    }
-                }
-            }
-
-            foreach (var note in data.Notifications)
-            {
-                foreach (var frame in note.Frames)
-                {
-                    if (frameCount <= 0xFF)
-                        writer.Write((byte)frame.Time);
-                    else if (frameCount <= 0xFFFF)
-                        writer.Write((ushort)frame.Time);
-                    else
-                        writer.Write((int)frame.Time);
-
-                    writer.Write(Encoding.UTF8.GetBytes(note.Name));
+                    writer.Write(Encoding.UTF8.GetBytes(bone.BoneName.Replace('.', '_')));
                     writer.Write((byte)0);
                 }
-            }
-        }
 
+                foreach (var modifier in boneModifiers)
+                {
+                    if (targetCount <= 0xFF)
+                        writer.Write((byte)modifier.Key);
+                    else if (targetCount <= 0xFFFF)
+                        writer.Write((ushort)modifier.Key);
+                    else
+                        throw new NotSupportedException();
+
+                    writer.Write(modifier.Value);
+                }
+
+                foreach (var bone in targets)
+                {
+                    writer.Write((byte)0);
+
+                    // TranslationFrames
+                    if ((flags & 1) != 0)
+                    {
+                        if (frameCount <= 0xFF)
+                            writer.Write((byte)bone.TranslationFrameCount);
+                        else if (frameCount <= 0xFFFF)
+                            writer.Write((ushort)bone.TranslationFrameCount);
+                        else
+                            writer.Write(bone.TranslationFrameCount);
+
+                        if (bone.TranslationFrames != null)
+                        {
+                            foreach (var frame in bone.TranslationFrames)
+                            {
+                                if (frameCount <= 0xFF)
+                                    writer.Write((byte)frame.Time);
+                                else if (frameCount <= 0xFFFF)
+                                    writer.Write((ushort)frame.Time);
+                                else
+                                    writer.Write((int)frame.Time);
+
+                                writer.Write(frame.Value.X * input.Scale);
+                                writer.Write(frame.Value.Y * input.Scale);
+                                writer.Write(frame.Value.Z * input.Scale);
+                            }
+                        }
+                    }
+
+                    // RotationFrames
+                    if ((flags & 2) != 0)
+                    {
+                        if (frameCount <= 0xFF)
+                            writer.Write((byte)bone.RotationFrameCount);
+                        else if (frameCount <= 0xFFFF)
+                            writer.Write((ushort)bone.RotationFrameCount);
+                        else
+                            writer.Write(bone.RotationFrameCount);
+
+                        if (bone.RotationFrames != null)
+                        {
+                            foreach (var frame in bone.RotationFrames)
+                            {
+                                if (frameCount <= 0xFF)
+                                    writer.Write((byte)frame.Time);
+                                else if (frameCount <= 0xFFFF)
+                                    writer.Write((ushort)frame.Time);
+                                else
+                                    writer.Write((int)frame.Time);
+
+                                writer.Write(frame.Value.X);
+                                writer.Write(frame.Value.Y);
+                                writer.Write(frame.Value.Z);
+                                writer.Write(frame.Value.W);
+                            }
+                        }
+                    }
+
+                    // ScaleFrames
+                    if ((flags & 4) != 0)
+                    {
+                        if (frameCount <= 0xFF)
+                            writer.Write((byte)bone.ScaleFrameCount);
+                        else if (frameCount <= 0xFFFF)
+                            writer.Write((ushort)bone.ScaleFrameCount);
+                        else
+                            writer.Write(bone.ScaleFrameCount);
+
+                        if(bone.ScaleFrames != null)
+                        {
+                            foreach (var frame in bone.ScaleFrames)
+                            {
+                                if (frameCount <= 0xFF)
+                                    writer.Write((byte)frame.Time);
+                                else if (frameCount <= 0xFFFF)
+                                    writer.Write((ushort)frame.Time);
+                                else
+                                    writer.Write((int)frame.Time);
+
+                                writer.Write(frame.Value.X);
+                                writer.Write(frame.Value.Y);
+                                writer.Write(frame.Value.Z);
+                            }
+                        }
+                    }
+                }
+            }
+
+            //foreach (var note in data.Notifications)
+            //{
+            //    foreach (var frame in note.Frames)
+            //    {
+            //        if (frameCount <= 0xFF)
+            //            writer.Write((byte)frame.Time);
+            //        else if (frameCount <= 0xFFFF)
+            //            writer.Write((ushort)frame.Time);
+            //        else
+            //            writer.Write((int)frame.Time);
+
+            //        writer.Write(Encoding.UTF8.GetBytes(note.Name));
+            //        writer.Write((byte)0);
+            //    }
+            //}
+        }
 
         /// <inheritdoc/>
         public override bool IsValid(Span<byte> startOfFile, Stream stream, string? filePath, string? ext)

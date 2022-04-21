@@ -9,6 +9,11 @@ namespace Borks.Graphics3D
     public enum TransformType
     {
         /// <summary>
+        /// Type is unknown.
+        /// </summary>
+        Unknown,
+
+        /// <summary>
         /// Type is inherited from the parent.
         /// </summary>
         Parent,

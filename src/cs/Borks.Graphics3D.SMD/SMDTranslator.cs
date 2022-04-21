@@ -43,7 +43,6 @@ namespace Borks.Graphics3D.SMD
         /// <inheritdoc/>
         public override void Write(Stream stream, string filePath, Graphics3DTranslatorIO input)
         {
-
             using var writer = new StreamWriter(stream);
 
             writer.WriteLine("version 1");
