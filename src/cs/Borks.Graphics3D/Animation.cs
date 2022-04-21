@@ -24,5 +24,12 @@ namespace Borks.Graphics3D
         {
             SkeletonAnimation = new(skeleton);
         }
+
+        public int GetAnimationFrameCount()
+        {
+            var total = 0;
+
+            return total;
+        }
     }
 }

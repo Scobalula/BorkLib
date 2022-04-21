@@ -357,8 +357,6 @@ namespace Borks.Graphics3D
         #region Private Methods
         private void Grow(int capacity)
         {
-            Debug.Assert(_items.Length < capacity);
-
             int nCapacity = _items.Length == 0 ? DefaultCapacity : 2 * _items.Length;
 
             if (nCapacity < capacity) nCapacity = capacity;

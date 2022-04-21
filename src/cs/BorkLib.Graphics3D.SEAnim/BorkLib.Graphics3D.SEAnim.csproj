@@ -1,17 +1,13 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <OutputType>Exe</OutputType>
     <TargetFramework>net6.0</TargetFramework>
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
 
   <ItemGroup>
-    <ProjectReference Include="..\Borks.Graphics3D.SEModel\Borks.Graphics3D.SEModel.csproj" />
-    <ProjectReference Include="..\Borks.Graphics3D.SMD\Borks.Graphics3D.SMD.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D\Borks.Graphics3D.csproj" />
-    <ProjectReference Include="..\Borks\Borks.csproj" />
   </ItemGroup>
 
 </Project>

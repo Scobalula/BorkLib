@@ -41,6 +41,24 @@ namespace Borks.Graphics3D
         /// </summary>
         /// <param name="boneName">Name of the bone</param>
         /// <returns>True of the bone if found, otherwise false</returns>
+        public bool TryGetBone(string? boneName, out int boneIndex, [NotNullWhen(true)] out SkeletonBone? bone)
+        {
+            if(TryGetBoneIndex(boneName, out boneIndex))
+            {
+                bone = Bones[boneIndex];
+                return true;
+            }
+
+            boneIndex = -1;
+            bone = null;
+            return false;
+        }
+
+        /// <summary>
+        /// Attempts to get the bone by name
+        /// </summary>
+        /// <param name="boneName">Name of the bone</param>
+        /// <returns>True of the bone if found, otherwise false</returns>
         public bool TryGetBone(string? boneName, [NotNullWhen(true)] out SkeletonBone? bone) => (bone = Bones.Find(x => x.Name.Equals(boneName))) != null;
 
         /// <summary>
@@ -48,7 +66,7 @@ namespace Borks.Graphics3D
         /// </summary>
         /// <param name="boneName">Name of the bone</param>
         /// <returns>True of the bone if found, otherwise false</returns>
-        public bool TryGetBoneIndex(string boneName, out int boneIndex) => (boneIndex = Bones.FindIndex(x => x.Name.Equals(boneName))) != -1;
+        public bool TryGetBoneIndex(string? boneName, out int boneIndex) => (boneIndex = Bones.FindIndex(x => x.Name.Equals(boneName))) != -1;
 
         /// <summary>
         /// Determines whether the model contains the bone
