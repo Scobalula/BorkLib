@@ -56,5 +56,45 @@ namespace Borks.Graphics3D
             BoneName = boneName;
             TransformType = TransformType.Parent;
         }
+
+        public Vector3 SampleTranslation(float time)
+        {
+            var sample = Vector3.Zero;
+
+            var (i0, i1) = AnimationHelper.GetFramePairIndex(TranslationFrames, time, 0.0f);
+
+            if(i0 != -1 && i1 != -1)
+            {
+                var firstFrame = TranslationFrames![i0];
+                var secondFrame = TranslationFrames![i1];
+
+                if (i0 == i1)
+                    sample = firstFrame.Value;
+                else
+                    sample = Vector3.Lerp(firstFrame.Value, secondFrame.Value, (time - firstFrame.Time) / (secondFrame.Time - firstFrame.Time));
+            }
+
+            return sample;
+        }
+
+        public Quaternion SampleRotation(float time)
+        {
+            var sample = Quaternion.Identity;
+
+            var (i0, i1) = AnimationHelper.GetFramePairIndex(RotationFrames, time, 0.0f);
+
+            if (i0 != -1 && i1 != -1)
+            {
+                var firstFrame = RotationFrames![i0];
+                var secondFrame = RotationFrames![i1];
+
+                if (i0 == i1)
+                    sample = firstFrame.Value;
+                else
+                    sample = Quaternion.Slerp(firstFrame.Value, secondFrame.Value, (time - firstFrame.Time) / (secondFrame.Time - firstFrame.Time));
+            }
+
+            return sample;
+        }
     }
 }

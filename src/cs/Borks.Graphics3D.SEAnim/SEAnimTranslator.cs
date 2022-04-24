@@ -158,12 +158,10 @@ namespace Borks.Graphics3D.SEModel
                 if (reader.ReadByte() != 0)
                     throw new IOException("Invalid SEModel Mesh Flag");
 
-                var layerCount = reader.ReadByte();
-                var influences = reader.ReadByte();
+                var layerCount  = reader.ReadByte();
+                var influences  = reader.ReadByte();
                 var vertexCount = reader.ReadInt32();
-                var faceCount = reader.ReadInt32();
-
-                Console.WriteLine(vertexCount);
+                var faceCount   = reader.ReadInt32();
 
                 var mesh = new Mesh();
 
@@ -301,10 +299,10 @@ namespace Borks.Graphics3D.SEModel
             // Determine bones with different types
             var boneModifiers = new Dictionary<int, byte>();
 
-            var data = input.Animations.First();
-            var frameCount = data.GetAnimationFrameCount();
+            var data        = input.Animations.First();
+            var frameCount  = data.GetAnimationFrameCount();
             var targetCount = data.SkeletalTargetCount;
-            int index = 0;
+            int index       = 0;
 
             if(data.SkeletonAnimation != null)
             {

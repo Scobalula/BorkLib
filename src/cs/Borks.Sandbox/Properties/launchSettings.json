@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Borks.Sandbox": {
+      "commandName": "Project",
+      "commandLineArgs": "\"C:\\Users\\Admin\\Documents\\output\\anim_hulk_anims\\Idle_Rage.smd\""
+    }
+  }
+}

@@ -8,15 +8,54 @@ namespace Borks.Sandbox
     {
         public static void Main(string[] args)
         {
+            var translatorFactory = new Graphics3DTranslatorFactory();
+
+            translatorFactory.RegisterTranslator(new SMDTranslator());
+            translatorFactory.RegisterTranslator(new SEAnimTranslator());
+            translatorFactory.RegisterTranslator(new SEModelTranslator());
+
             var smdTranslator     = new SMDTranslator();
             var seanimTranslator  = new SEAnimTranslator();
             var semodelTranslator = new SEModelTranslator();
 
-            var output = new Graphics3DTranslatorIO();
+            Printer.WriteLine("INIT", "------------------------");
+            Printer.WriteLine("INIT", "SMD to SEModel/SEAnim");
+            Printer.WriteLine("INIT", "Butterbloc Edition");
+            Printer.WriteLine("INIT", "------------------------");
 
-            smdTranslator.Read(@"C:\Users\Admin\Documents\nigerion\anims\vm_ar_g3a3_reload_empty.smd", output);
-            seanimTranslator.Write(@"C:\Users\Admin\Documents\nigerion\anims\vm_ar_g3a3_reload_empty.seanim", output);
+            var io = new Graphics3DTranslatorIO();
 
+            foreach (var file in args)
+            {
+                var ext = Path.GetExtension(file);
+
+                if(!string.IsNullOrEmpty(ext) && ext.Equals(".smd", StringComparison.CurrentCultureIgnoreCase))
+                {
+                    Printer.WriteLine("MARV", $"Converting: {Path.GetFileName(file)}");
+
+                    smdTranslator.Read(file, io);
+
+                    // Check did we get an animation from this
+                    if(io.Animations.Count > 0)
+                    {
+                        seanimTranslator.Write(Path.ChangeExtension(file, ".seanim"), io);
+                    }
+                    else
+                    {
+                        semodelTranslator.Write(Path.ChangeExtension(file, ".semodel"), io);
+                    }
+
+                    Printer.WriteLine("MARV", $"Converted: {Path.GetFileName(file)}");
+                }
+
+                io.Models.Clear();
+                io.Skeletons.Clear();
+                io.Animations.Clear();
+            }
+
+            Printer.WriteLine("DONE", "Execution complete.");
+
+            Console.ReadLine();
         }
     }
 }

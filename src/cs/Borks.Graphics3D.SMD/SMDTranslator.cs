@@ -72,6 +72,45 @@ namespace Borks.Graphics3D.SMD
             {
                 SMDHelper.WriteFrame(writer, index++, bone.LocalPosition, bone.LocalRotation);
             }
+            // Check if we have animations
+            if (input.Animations.Count > 0)
+            {
+                var animation = input.Animations[0];
+                if(animation.SkeletonAnimation != null)
+                {
+                    var frames = animation.GetAnimationFrameCount();
+
+                    // Start by building a index map against our skeleton
+                    var indexMap = new int[animation.SkeletonAnimation.Targets.Count];
+                    index = 0;
+                    foreach (var target in animation.SkeletonAnimation.Targets)
+                    {
+                        indexMap[index++] = skeleton.GetBoneIndex(target.BoneName);
+                    }
+
+                    // Next we'll need iterate all bones
+                    for (float i = 1; i < frames; i += 1)
+                    {
+                        writer.WriteLine($"time {(int)i}");
+
+                        index = 0;
+
+                        foreach (var target in animation.SkeletonAnimation.Targets)
+                        {
+                            var targetIndex = indexMap[index];
+
+                            if (targetIndex != -1)
+                            {
+                                // Sample at this frame
+                                var translation = target.SampleTranslation(i);
+                                var rotation = target.SampleRotation(i);
+
+                                SMDHelper.WriteFrame(writer, index++, translation, rotation);
+                            }
+                        }
+                    }
+                }
+            }
             writer.WriteLine("end");
             // Begin Triangles
             if(input.Models.Count > 0)
