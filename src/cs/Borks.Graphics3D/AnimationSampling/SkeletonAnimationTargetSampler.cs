@@ -11,5 +11,6 @@ namespace Borks.Graphics3D.AnimationSampling
     /// </summary>
     public class SkeletonAnimationTargetSampler
     {
+        public 
     }
 }
