@@ -38,10 +38,10 @@ namespace Borks.Graphics3D
             Targets = new();
         }
 
-        public SkeletonAnimation(Skeleton skeleton, TransformType type)
+        public SkeletonAnimation(Skeleton? skeleton, int targetCount, TransformType type)
         {
             Skeleton = skeleton;
-            Targets = new();
+            Targets = new(targetCount);
             TransformType = type;
         }
     }

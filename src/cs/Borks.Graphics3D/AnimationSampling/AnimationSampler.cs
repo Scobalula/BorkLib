@@ -11,6 +11,16 @@ namespace Borks.Graphics3D.AnimationSampling
     /// </summary>
     public class AnimationSampler
     {
+        /// <summary>
+        /// Gets or Sets the sampler layers
+        /// </summary>
+        public List<AnimationSamplerLayer> Layers { get; set; }
 
+        public AnimationSampler(Skeleton skeleton, Animation anim) : this(skeleton, new[] { ("Main", anim, 0.0f) }) { }
+
+        public AnimationSampler(Skeleton skeleton, IEnumerable<(string, Animation, float)> anims)
+        {
+            Layers = new();
+        }
     }
 }

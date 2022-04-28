@@ -33,6 +33,11 @@ namespace Borks.Graphics3D
         public TransformType TransformType { get; set; }
 
         /// <summary>
+        /// Gets or Sets the transform type applied to bones that are children of this bone that are set to parent.
+        /// </summary>
+        public TransformType ChildTransformType { get; set; }
+
+        /// <summary>
         /// Gets the number of translations frames.
         /// </summary>
         public int TranslationFrameCount => TranslationFrames != null ? TranslationFrames.Count : 0;

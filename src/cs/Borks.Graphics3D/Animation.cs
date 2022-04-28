@@ -17,6 +17,11 @@ namespace Borks.Graphics3D
         public SkeletonAnimation? SkeletonAnimation { get; set; }
 
         /// <summary>
+        /// Gets or Sets the animation actions.
+        /// </summary>
+        public List<AnimationAction> Actions { get; set; }
+
+        /// <summary>
         /// Gets or Sets the animation frame rate.
         /// </summary>
         public float Framerate { get; set; }
@@ -31,6 +36,16 @@ namespace Borks.Graphics3D
         /// </summary>
         public TransformType SkeletalTransformType => SkeletonAnimation != null ? SkeletonAnimation.TransformType : TransformType.Unknown;
 
+
+        /// <summary>
+        /// Initializes a new instance of the <see cref="Animation"/> class.
+        /// </summary>
+        public Animation()
+        {
+            Framerate = 30.0f;
+            Actions = new();
+        }
+
         /// <summary>
         /// Initializes a new instance of the <see cref="Animation"/> class.
         /// </summary>
@@ -39,6 +54,7 @@ namespace Borks.Graphics3D
         {
             Framerate = 30.0f;
             SkeletonAnimation = new(skeleton);
+            Actions = new();
         }
 
         /// <summary>
@@ -81,9 +97,34 @@ namespace Borks.Graphics3D
                         }
                     }
                 }
+
+                foreach (var action in Actions)
+                {
+                    foreach (var f in action.Frames)
+                    {
+                        minFrame = MathF.Min(minFrame, f.Time);
+                        maxFrame = MathF.Max(maxFrame, f.Time);
+                    }
+                }
             }
 
-            return maxFrame - minFrame;
+            return (maxFrame - minFrame) + 1;
+        }
+
+        /// <summary>
+        /// Calculates the total number of actions in this animation.
+        /// </summary>
+        /// <returns>The total number of actions in this animation.</returns>
+        public int GetAnimationActionCount()
+        {
+            var actionCount = 0;
+
+            foreach (var action in Actions)
+            {
+                actionCount += action.Frames.Count;
+            }
+
+            return actionCount;
         }
 
         /// <summary>
@@ -96,13 +137,11 @@ namespace Borks.Graphics3D
             {
                 foreach (var target in SkeletonAnimation.Targets)
                 {
-                    if(target.TranslationFrames == null || target.TranslationFrames.Count <= 0)
+                    if(target.TranslationFrames != null && target.TranslationFrames.Count >= 0)
                     {
-                        return false;
+                        return true;
                     }
                 }
-
-                return true;
             }
 
             return false;
@@ -118,13 +157,11 @@ namespace Borks.Graphics3D
             {
                 foreach (var target in SkeletonAnimation.Targets)
                 {
-                    if (target.RotationFrames == null || target.RotationFrames.Count <= 0)
+                    if (target.RotationFrames != null && target.RotationFrames.Count >= 0)
                     {
-                        return false;
+                        return true;
                     }
                 }
-
-                return true;
             }
 
             return false;
@@ -140,16 +177,32 @@ namespace Borks.Graphics3D
             {
                 foreach (var target in SkeletonAnimation.Targets)
                 {
-                    if (target.ScaleFrames == null || target.ScaleFrames.Count <= 0)
+                    if (target.ScaleFrames != null && target.ScaleFrames.Count >= 0)
                     {
-                        return false;
+                        return true;
                     }
                 }
-
-                return true;
             }
 
             return false;
+        }
+
+        /// <summary>
+        /// Creates a new instance of an <see cref="AnimationAction"/> within this animation, if one already exists with this name, then that action is returned.
+        /// </summary>
+        /// <param name="name">Name of the action.</param>
+        /// <returns>A new action that is added to this animation if it doesn't exist, otherwise an existing action with the given name.</returns>
+        public AnimationAction CreateAction(string name)
+        {
+            var idx = Actions.FindIndex(x => x.Name == name);
+
+            if (idx != -1)
+                return Actions[idx];
+
+            var nAction = new AnimationAction(name, "Default");
+            Actions.Add(nAction);
+
+            return nAction;
         }
     }
 }

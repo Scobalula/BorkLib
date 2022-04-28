@@ -31,266 +31,197 @@ namespace Borks.Graphics3D.SEModel
         /// <inheritdoc/>
         public override void Read(Stream stream, string filePath, Graphics3DTranslatorIO output)
         {
-            // SEModels can only contain a single skeleton
-            // and model.
-            var scale = 1.0f;
-            var skeleton = new Skeleton();
-            var result = new Model(skeleton)
+            using var reader = new BinaryReader(stream);
+
+            var magic = reader.ReadChars(6);
+            var version = reader.ReadInt16();
+            var sizeofHeader = reader.ReadInt16();
+            var transformType = TransformType.Unknown;
+
+            switch (reader.ReadByte())
             {
-                Name = Path.GetFileNameWithoutExtension(filePath)
-            };
-
-            using var reader = new BinaryReader(stream, Encoding.Default, true);
-
-            if (!Magic.SequenceEqual(reader.ReadBytes(Magic.Length)))
-                throw new IOException("Invalid SEModel Magic");
-            if (reader.ReadUInt16() != 0x1)
-                throw new IOException("Invalid SEModel Version");
-            if (reader.ReadUInt16() != 0x14)
-                throw new IOException("Invalid SEModel Header Size");
-
-            var dataPresence = reader.ReadByte();
-            var boneDataPresence = reader.ReadByte();
-            var meshDataPresence = reader.ReadByte();
-
-            var boneCount = reader.ReadInt32();
-            var meshCount = reader.ReadInt32();
-            var matCount = reader.ReadInt32();
-
-            var reserved0 = reader.ReadByte();
-            var reserved1 = reader.ReadByte();
-            var reserved2 = reader.ReadByte();
-
-            var boneNames = new string[boneCount];
-            var boneParents = new int[boneCount];
-
-            for (int i = 0; i < boneNames.Length; i++)
-            {
-                boneNames[i] = ReadUTF8String(reader);
+                case 0: transformType = TransformType.Absolute; break;
+                case 1: transformType = TransformType.Additive; break;
+                case 2: transformType = TransformType.Relative; break;
             }
 
-            var hasWorldTransforms = (boneDataPresence & (1 << 0)) != 0;
-            var hasLocalTransforms = (boneDataPresence & (1 << 1)) != 0;
-            var hasScaleTransforms = (boneDataPresence & (1 << 2)) != 0;
+            var flags         = reader.ReadByte();
+            var dataFlags     = reader.ReadByte();
+            var dataPropFlags = reader.ReadByte();
+            var reserved      = reader.ReadUInt16();
+            var frameRate     = reader.ReadSingle();
+            var frameCount    = reader.ReadInt32();
+            var boneCount     = reader.ReadInt32();
+            var modCount      = reader.ReadByte();
+            var reserved0     = reader.ReadByte();
+            var reserved1     = reader.ReadByte();
+            var reserved2     = reader.ReadByte();
+            var noteCount     = reader.ReadInt32();
+
+            var anim = new Animation();
+            var skelAnim = new SkeletonAnimation(null, boneCount, transformType);
+
+            anim.Framerate = frameRate;
 
             for (int i = 0; i < boneCount; i++)
             {
-                // For now, this flag is unused, and so a non-zero indicates
-                // something is wrong in our book
-                if (reader.ReadByte() != 0)
-                    throw new IOException("Invalid SEModel Bone Flag");
+                skelAnim.Targets.Add(new(ReadUTF8String(reader)));
 
-                boneParents[i] = reader.ReadInt32();
-
-                var bone = new SkeletonBone(boneNames[i])
-                {
-                    Index = i
-                };
-
-                if (hasWorldTransforms)
-                {
-                    bone.LocalPosition = new Vector3(
-                        reader.ReadSingle() * scale,
-                        reader.ReadSingle() * scale,
-                        reader.ReadSingle() * scale);
-                    bone.GlobalRotation = new Quaternion(
-                        reader.ReadSingle(),
-                        reader.ReadSingle(),
-                        reader.ReadSingle(),
-                        reader.ReadSingle());
-                }
-                else
-                {
-                    bone.GlobalPosition = Vector3.Zero;
-                    bone.GlobalRotation = Quaternion.Identity;
-                }
-
-                if (hasLocalTransforms)
-                {
-                    bone.LocalPosition = new Vector3(
-                        reader.ReadSingle() * scale,
-                        reader.ReadSingle() * scale,
-                        reader.ReadSingle()) * scale;
-                    bone.LocalRotation = new Quaternion(
-                        reader.ReadSingle(),
-                        reader.ReadSingle(),
-                        reader.ReadSingle(),
-                        reader.ReadSingle());
-                }
-                else
-                {
-                    bone.LocalPosition = Vector3.Zero;
-                    bone.LocalRotation = Quaternion.Identity;
-                }
-
-                if (hasScaleTransforms)
-                {
-                    bone.Scale = new Vector3(
-                        reader.ReadSingle(),
-                        reader.ReadSingle(),
-                        reader.ReadSingle());
-                }
-
-                result.Skeleton!.Bones.Add(bone);
+                if ((dataFlags & 1) != 0)
+                    skelAnim.Targets[i].TranslationFrames = new();
+                if ((dataFlags & 2) != 0)
+                    skelAnim.Targets[i].RotationFrames = new();
+                if ((dataFlags & 4) != 0)
+                    skelAnim.Targets[i].ScaleFrames = new();
             }
 
-            for (int i = 0; i < skeleton.Bones.Count; i++)
+            for (int i = 0; i < modCount; i++)
             {
-                if (boneParents[i] != -1)
+                var boneIndex = boneCount <= 0xFF ? reader.ReadByte() : reader.ReadUInt16();
+
+                switch (reader.ReadByte())
                 {
-                    skeleton.Bones[i].Parent = skeleton.Bones[boneParents[i]];
+                    case 0: skelAnim.Targets[boneIndex].ChildTransformType = TransformType.Absolute; break;
+                    case 1: skelAnim.Targets[boneIndex].ChildTransformType = TransformType.Additive; break;
+                    case 2: skelAnim.Targets[boneIndex].ChildTransformType = TransformType.Relative; break;
                 }
             }
 
-            var hasUVs = (meshDataPresence & (1 << 0)) != 0;
-            var hasNormals = (meshDataPresence & (1 << 1)) != 0;
-            var hasColours = (meshDataPresence & (1 << 2)) != 0;
-            var hasWeights = (meshDataPresence & (1 << 3)) != 0;
-
-            var materialIndices = new List<int>[meshCount];
-
-            result.Meshes = new List<Mesh>();
-
-            for (int i = 0; i < meshCount; i++)
+            foreach (var bone in skelAnim.Targets)
             {
-                // For now, this flag is unused, and so a non-zero indicates
-                // something is wrong in our book
-                if (reader.ReadByte() != 0)
-                    throw new IOException("Invalid SEModel Mesh Flag");
+                reader.ReadByte();
 
-                var layerCount  = reader.ReadByte();
-                var influences  = reader.ReadByte();
-                var vertexCount = reader.ReadInt32();
-                var faceCount   = reader.ReadInt32();
-
-                var mesh = new Mesh();
-
-                // Not necessary but initializes the collection capacity 
-                // so we're not reallocating
-                mesh.Positions.SetCapacity(vertexCount);
-                mesh.Faces.SetCapacity(faceCount);
-
-
-                // Positions
-                for (int v = 0; v < vertexCount; v++)
+                if ((dataFlags & 1) != 0)
                 {
-                    mesh.Positions.Add(new(
-                        reader.ReadSingle() * scale,
-                        reader.ReadSingle() * scale,
-                        reader.ReadSingle() * scale));
-                }
-                // UVs
-                if (hasUVs)
-                {
-                    mesh.UVLayers.SetCapacity(vertexCount, layerCount);
+                    int keyCount;
 
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        for (int l = 0; l < layerCount; l++)
-                        {
-                            mesh.UVLayers.Add(new Vector2(reader.ReadSingle(), reader.ReadSingle()), v, l);
-                        }
-                    }
-                }
-                // Normals
-                if (hasNormals)
-                {
-                    mesh.Normals.SetCapacity(vertexCount);
-
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        mesh.Normals.Add(new(reader.ReadSingle(), reader.ReadSingle(), reader.ReadSingle()));
-                    }
-                }
-                // Colours
-                if (hasColours)
-                {
-                    mesh.Colours.SetCapacity(vertexCount);
-
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        mesh.Colours.Add(new(
-                            reader.ReadByte() / 255.0f,
-                            reader.ReadByte() / 255.0f,
-                            reader.ReadByte() / 255.0f,
-                            reader.ReadByte() / 255.0f));
-                    }
-                }
-                // Weights
-                if (hasWeights)
-                {
-                    mesh.Influences.SetCapacity(vertexCount, influences);
-
-                    for (int v = 0; v < vertexCount; v++)
-                    {
-                        for (int w = 0; w < influences; w++)
-                        {
-                            mesh.Influences.Add(new(
-                                boneCount <= 0xFF ? reader.ReadByte() :
-                                boneCount <= 0xFFFF ? reader.ReadUInt16() :
-                                reader.ReadInt32(),
-                                reader.ReadSingle()), v, w);
-                        }
-                    }
-                }
-                // Faces
-                for (int f = 0; f < faceCount; f++)
-                {
-                    if (vertexCount <= 0xFF)
-                    {
-                        mesh.Faces.Add(new(
-                            reader.ReadByte(),
-                            reader.ReadByte(),
-                            reader.ReadByte()));
-                    }
-                    else if (vertexCount <= 0xFFFF)
-                    {
-                        mesh.Faces.Add(new(
-                            reader.ReadUInt16(),
-                            reader.ReadUInt16(),
-                            reader.ReadUInt16()));
-                    }
+                    if (frameCount <= 0xFF)
+                        keyCount = reader.ReadByte();
+                    else if (frameCount <= 0xFFFF)
+                        keyCount = reader.ReadUInt16();
                     else
+                        keyCount = reader.ReadInt32();
+
+                    for (int f = 0; f < keyCount; f++)
                     {
-                        mesh.Faces.Add(new(
-                            reader.ReadInt32(),
-                            reader.ReadInt32(),
-                            reader.ReadInt32()));
+                        int frame;
+
+                        if (frameCount <= 0xFF)
+                            frame = reader.ReadByte();
+                        else if (frameCount <= 0xFFFF)
+                            frame = reader.ReadUInt16();
+                        else
+                            frame = reader.ReadInt32();
+
+                        if ((dataPropFlags & (1 << 0)) == 0)
+                            bone.TranslationFrames!.Add(new(
+                                frame,
+                                new(reader.ReadSingle(),
+                                    reader.ReadSingle(),
+                                    reader.ReadSingle())));
+                        else
+                            bone.TranslationFrames!.Add(new(
+                                frame,
+                                new((float)reader.ReadDouble(),
+                                    (float)reader.ReadDouble(),
+                                    (float)reader.ReadDouble())));
                     }
                 }
 
-                materialIndices[i] = new List<int>(layerCount);
-
-                for (int m = 0; m < layerCount; m++)
+                if ((dataFlags & 2) != 0)
                 {
-                    materialIndices[i].Add(reader.ReadInt32());
+                    int keyCount;
+
+                    if (frameCount <= 0xFF)
+                        keyCount = reader.ReadByte();
+                    else if (frameCount <= 0xFFFF)
+                        keyCount = reader.ReadUInt16();
+                    else
+                        keyCount = reader.ReadInt32();
+
+                    for (int f = 0; f < keyCount; f++)
+                    {
+                        int frame;
+
+                        if (frameCount <= 0xFF)
+                            frame = reader.ReadByte();
+                        else if (frameCount <= 0xFFFF)
+                            frame = reader.ReadUInt16();
+                        else
+                            frame = reader.ReadInt32();
+
+                        if ((dataPropFlags & (1 << 0)) == 0)
+                            bone.RotationFrames!.Add(new(
+                                frame, 
+                                new(reader.ReadSingle(),
+                                    reader.ReadSingle(),
+                                    reader.ReadSingle(),
+                                    reader.ReadSingle())));
+                        else
+                            bone.RotationFrames!.Add(new(
+                                frame,
+                                new((float)reader.ReadDouble(),
+                                    (float)reader.ReadDouble(),
+                                    (float)reader.ReadDouble(),
+                                    (float)reader.ReadDouble())));
+                    }
                 }
 
-                result.Meshes.Add(mesh);
-            }
-
-            for (int i = 0; i < matCount; i++)
-            {
-                var mtl = new Material(ReadUTF8String(reader));
-
-                if (reader.ReadBoolean())
+                if ((dataFlags & 4) != 0)
                 {
-                    mtl.Textures["DiffuseMap"] = new(ReadUTF8String(reader), "DiffuseMap");
-                    mtl.Textures["NormalMap"] = new(ReadUTF8String(reader), "DiffuseMap");
-                    mtl.Textures["SpecularMap"] = new(ReadUTF8String(reader), "DiffuseMap");
+                    int keyCount;
+
+                    if (frameCount <= 0xFF)
+                        keyCount = reader.ReadByte();
+                    else if (frameCount <= 0xFFFF)
+                        keyCount = reader.ReadUInt16();
+                    else
+                        keyCount = reader.ReadInt32();
+
+                    for (int f = 0; f < keyCount; f++)
+                    {
+                        int frame;
+
+                        if (frameCount <= 0xFF)
+                            frame = reader.ReadByte();
+                        else if (frameCount <= 0xFFFF)
+                            frame = reader.ReadUInt16();
+                        else
+                            frame = reader.ReadInt32();
+
+                        if ((dataPropFlags & (1 << 0)) == 0)
+                            bone.ScaleFrames!.Add(new(
+                                frame,
+                                new(reader.ReadSingle(),
+                                    reader.ReadSingle(),
+                                    reader.ReadSingle())));
+                        else
+                            bone.ScaleFrames!.Add(new(
+                                frame,
+                                new((float)reader.ReadDouble(),
+                                    (float)reader.ReadDouble(),
+                                    (float)reader.ReadDouble())));
+                    }
                 }
-
-                result.Materials.Add(mtl);
             }
 
-            // Last pass for materials
-            for (int i = 0; i < result.Meshes.Count; i++)
+            for (int i = 0; i < noteCount; i++)
             {
-                foreach (var index in materialIndices[i])
-                    result.Meshes[i].Materials.Add(result.Materials[index]);
+                int frame;
+
+                if (frameCount <= 0xFF)
+                    frame = reader.ReadByte();
+                else if (frameCount <= 0xFFFF)
+                    frame = reader.ReadUInt16();
+                else
+                    frame = reader.ReadInt32();
+
+                anim.CreateAction(ReadUTF8String(reader)).Frames.Add(new(frame, null));
             }
 
-            output.Models.Add(result);
+            anim.SkeletonAnimation = skelAnim;
+
+            output.Animations.Add(anim);
         }
 
         /// <inheritdoc/>
@@ -301,6 +232,7 @@ namespace Borks.Graphics3D.SEModel
 
             var data        = input.Animations.First();
             var frameCount  = data.GetAnimationFrameCount();
+            var actionCount = data.GetAnimationActionCount();
             var targetCount = data.SkeletalTargetCount;
             int index       = 0;
 
@@ -334,9 +266,9 @@ namespace Borks.Graphics3D.SEModel
             // Convert to SEAnim Type
             switch (data.SkeletalTransformType)
             {
-                case TransformType.Absolute: writer.Write((byte)1); break;
-                case TransformType.Additive: writer.Write((byte)2); break;
-                default: writer.Write((byte)0); break;
+                case TransformType.Absolute: writer.Write((byte)0); break;
+                case TransformType.Additive: writer.Write((byte)1); break;
+                default: writer.Write((byte)2); break;
             }
 
             writer.Write((byte)0);
@@ -349,8 +281,8 @@ namespace Borks.Graphics3D.SEModel
                 flags |= 2;
             if (data.HasSkeletalScalesFrames())
                 flags |= 4;
-            //if (data.Notifications.Count > 0)
-            //    flags |= 64;
+            if (actionCount > 0)
+                flags |= 64;
 
             writer.Write(flags);
             writer.Write((byte)0);
@@ -361,8 +293,7 @@ namespace Borks.Graphics3D.SEModel
             writer.Write((byte)boneModifiers.Count);
             writer.Write((byte)0);
             writer.Write((ushort)0);
-            // writer.Write(data.GetNotificationFrameCount());
-            writer.Write(0);
+            writer.Write(actionCount);
 
             if (data.SkeletonAnimation != null)
             {
@@ -477,21 +408,21 @@ namespace Borks.Graphics3D.SEModel
                 }
             }
 
-            //foreach (var note in data.Notifications)
-            //{
-            //    foreach (var frame in note.Frames)
-            //    {
-            //        if (frameCount <= 0xFF)
-            //            writer.Write((byte)frame.Time);
-            //        else if (frameCount <= 0xFFFF)
-            //            writer.Write((ushort)frame.Time);
-            //        else
-            //            writer.Write((int)frame.Time);
+            foreach (var action in data.Actions)
+            {
+                foreach (var frame in action.Frames)
+                {
+                    if (frameCount <= 0xFF)
+                        writer.Write((byte)frame.Time);
+                    else if (frameCount <= 0xFFFF)
+                        writer.Write((ushort)frame.Time);
+                    else
+                        writer.Write((int)frame.Time);
 
-            //        writer.Write(Encoding.UTF8.GetBytes(note.Name));
-            //        writer.Write((byte)0);
-            //    }
-            //}
+                    writer.Write(Encoding.UTF8.GetBytes(action.Name));
+                    writer.Write((byte)0);
+                }
+            }
         }
 
         /// <inheritdoc/>
