@@ -9,7 +9,7 @@ namespace Borks.Graphics3D
     /// <summary>
     /// A class to hold a 3D Model.
     /// </summary>
-    public class Model
+    public class Model : Graphics3DObject
     {
         /// <summary>
         /// Gets or Sets the name of the model.

@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Runtime.CompilerServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -42,6 +43,34 @@ namespace Borks.Graphics3D
             }
 
             return (list.Count - 1, list.Count - 1);
+        }
+
+        [MethodImpl(MethodImplOptions.AggressiveInlining)]
+        public static float GetWeight(List<AnimationFrame<float>> weights, float time, float defaultWeight, ref int cursor)
+        {
+            var (firstIndex, secondIndex) = GetFramePairIndex(weights, time, 0, cursor:cursor);
+            var result = defaultWeight;
+
+            if (firstIndex != -1)
+            {
+                if (firstIndex == secondIndex)
+                {
+                    result = weights[firstIndex].Value;
+                }
+                else
+                {
+                    var firstFrame = weights[firstIndex];
+                    var secondFrame = weights[secondIndex];
+
+                    var lerpAmount = (time - firstFrame.Time) / (secondFrame.Time - firstFrame.Time);
+
+                    result = (firstFrame.Value * (1 - lerpAmount)) + (secondFrame.Value * lerpAmount);
+                }
+
+                cursor = firstIndex;
+            }
+
+            return result;
         }
     }
 }

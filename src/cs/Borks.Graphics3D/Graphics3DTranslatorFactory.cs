@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -126,6 +127,40 @@ namespace Borks.Graphics3D
 
             translator = null;
             return false;
+        }
+
+        public T Load<T>(Stream stream, string name) where T : Graphics3DObject
+        {
+            var type = typeof(T);
+            var io = new Graphics3DTranslatorIO();
+
+            if (!TryLoadStream(stream, name, io))
+                throw new NotSupportedException();
+
+            var result = io.Objects.FirstOrDefault(x => x.GetType() == type);
+
+            if (result == null)
+                throw new Exception();
+
+            return (T)result;
+        }
+
+        public T Load<T>(string filePath) where T : Graphics3DObject
+        {
+            using var stream = File.OpenRead(filePath);
+            return Load<T>(stream, filePath);
+        }
+
+        public void Save<T>(Stream stream, string name, T data) where T : Graphics3DObject
+        {
+            if (!TrySaveStream(stream, name, new(data)))
+                throw new Exception();
+        }
+
+        public void Save<T>(string filePath, T data) where T : Graphics3DObject
+        {
+            using var stream = File.Create(filePath);
+            Save(stream, filePath, data);
         }
     }
 }

@@ -148,8 +148,8 @@ namespace Borks.Graphics3D
                             {
                                 var nBone = new SkeletonBone(bone.Name)
                                 {
-                                    LocalPosition = bone.LocalPosition,
-                                    LocalRotation = bone.LocalRotation,
+                                    BaseLocalTranslation = bone.BaseLocalTranslation,
+                                    BaseLocalRotation = bone.BaseLocalRotation,
                                     Index         = root.Skeleton.Bones.Count,
                                     Parent        = root.Skeleton.GetBone(bone.Parent?.Name)
                                 };
@@ -170,8 +170,8 @@ namespace Borks.Graphics3D
                         // if bones have moved
                         if(newRoot != null)
                         {
-                            translation = newRoot.GlobalPosition - rootBone.GlobalPosition;
-                            rotation = (newRoot.GlobalRotation * Quaternion.Inverse(rootBone.GlobalRotation));
+                            translation = newRoot.BaseWorldTranslation - rootBone.BaseWorldTranslation;
+                            rotation = (newRoot.BaseWorldRotation * Quaternion.Inverse(rootBone.BaseWorldRotation));
                         }
                     }
 

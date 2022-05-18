@@ -89,11 +89,11 @@ namespace Borks.Graphics3D.SEModel
 
                 if (hasWorldTransforms)
                 {
-                    bone.LocalPosition = new Vector3(
+                    bone.BaseLocalTranslation = new Vector3(
                         reader.ReadSingle() * scale,
                         reader.ReadSingle() * scale,
                         reader.ReadSingle() * scale);
-                    bone.GlobalRotation = new Quaternion(
+                    bone.BaseWorldRotation = new Quaternion(
                         reader.ReadSingle(),
                         reader.ReadSingle(),
                         reader.ReadSingle(),
@@ -101,17 +101,17 @@ namespace Borks.Graphics3D.SEModel
                 }
                 else
                 {
-                    bone.GlobalPosition = Vector3.Zero;
-                    bone.GlobalRotation = Quaternion.Identity;
+                    bone.BaseWorldTranslation = Vector3.Zero;
+                    bone.BaseWorldRotation = Quaternion.Identity;
                 }
 
                 if (hasLocalTransforms)
                 {
-                    bone.LocalPosition = new Vector3(
+                    bone.BaseLocalTranslation = new Vector3(
                         reader.ReadSingle() * scale,
                         reader.ReadSingle() * scale,
                         reader.ReadSingle()) * scale;
-                    bone.LocalRotation = new Quaternion(
+                    bone.BaseLocalRotation = new Quaternion(
                         reader.ReadSingle(),
                         reader.ReadSingle(),
                         reader.ReadSingle(),
@@ -119,13 +119,13 @@ namespace Borks.Graphics3D.SEModel
                 }
                 else
                 {
-                    bone.LocalPosition = Vector3.Zero;
-                    bone.LocalRotation = Quaternion.Identity;
+                    bone.BaseLocalTranslation = Vector3.Zero;
+                    bone.BaseLocalRotation = Quaternion.Identity;
                 }
 
                 if (hasScaleTransforms)
                 {
-                    bone.Scale = new Vector3(
+                    bone.BaseScale = new Vector3(
                         reader.ReadSingle(),
                         reader.ReadSingle(),
                         reader.ReadSingle());
@@ -292,14 +292,17 @@ namespace Borks.Graphics3D.SEModel
                     result.Meshes[i].Materials.Add(result.Materials[index]);
             }
 
-            output.Models.Add(result);
+            output.Objects.Add(result);
+            output.Objects.Add(skeleton);
         }
 
         /// <inheritdoc/>
         public override void Write(Stream stream, string filePath, Graphics3DTranslatorIO input)
         {
-            var data = input.Models.FirstOrDefault();
-            var skeleton = input.Skeletons.FirstOrDefault();
+            var hasSkeleton = input.TryGetFirstSkeleton(out var skeleton);
+            
+
+            var data = input.GetFirstInstance<Model>();
             var boneCount = skeleton != null ? skeleton.Bones.Count : 0;
             var meshCount = data != null ? data.Meshes.Count : 0;
             var matCount = data != null ? data.Materials.Count : 0;
@@ -334,10 +337,10 @@ namespace Borks.Graphics3D.SEModel
 
                     writer.Write(bone.Parent == null ? -1 : skeleton.Bones.IndexOf(bone.Parent));
 
-                    var wt = bone.GlobalPosition;
-                    var wr = bone.GlobalRotation;
-                    var lt = bone.LocalPosition;
-                    var lr = bone.LocalRotation;
+                    var wt = bone.BaseWorldTranslation;
+                    var wr = bone.BaseWorldRotation;
+                    var lt = bone.BaseLocalTranslation;
+                    var lr = bone.BaseLocalRotation;
                     var s = Vector3.One;
 
                     writer.Write(wt.X * scale);

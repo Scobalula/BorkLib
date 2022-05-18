@@ -9,7 +9,7 @@ namespace Borks.Graphics3D
     /// <summary>
     /// A class to hold a basic <see cref="Material"/>.
     /// </summary>
-    public class Material
+    public class Material : Graphics3DObject
     {
         /// <summary>
         /// Gets or Sets the name of the material.

@@ -1,9 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics.CodeAnalysis;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Diagnostics.CodeAnalysis;
 
 namespace Borks.Graphics3D
 {
@@ -13,19 +8,9 @@ namespace Borks.Graphics3D
     public class Graphics3DTranslatorIO
     {
         /// <summary>
-        /// Gets or Sets any skeletons read by the translator.
+        /// Gets or Sets any objects read by the translator.
         /// </summary>
-        public List<Skeleton> Skeletons { get; set; }
-
-        /// <summary>
-        /// Gets or Sets any models read by the translator.
-        /// </summary>
-        public List<Model> Models { get; set; }
-
-        /// <summary>
-        /// Gets or Sets any animations read by the translator.
-        /// </summary>
-        public List<Animation> Animations { get; set; }
+        public List<Graphics3DObject> Objects { get; set; }
 
         /// <summary>
         /// Gets or Sets the scale to apply on export if supported by the translator.
@@ -37,23 +22,25 @@ namespace Borks.Graphics3D
         /// </summary>
         public Graphics3DTranslatorIO()
         {
-            Models = new();
-            Animations = new();
-            Skeletons = new();
+            Objects = new();
             Scale = 1.0f;
         }
 
         /// <summary>
         /// Initializes a new instance of the <see cref="Graphics3DTranslatorIO"/> class.
         /// </summary>
-        public Graphics3DTranslatorIO(Model model)
+        public Graphics3DTranslatorIO(Graphics3DObject obj)
         {
-            Models = new();
-            Animations = new();
-            Skeletons = new();
+            Objects = new();
             Scale = 1.0f;
 
-            Models.Add(model);
+            Objects.Add(obj);
+        }
+
+        public T? GetFirstInstance<T>() where T : Graphics3DObject
+        {
+            var type = typeof(T);
+            return (T?)Objects.FirstOrDefault(x => x.GetType() == type);
         }
 
         /// <summary>
@@ -63,28 +50,12 @@ namespace Borks.Graphics3D
         /// <returns>True if found, otherwise false.</returns>
         public bool TryGetFirstSkeleton([NotNullWhen(true)] out Skeleton? skeleton)
         {
-            skeleton = null;
-
-            // Check for the se
-            if(Skeletons.Count > 0)
-            {
-                skeleton = Skeletons[0];
-                return true;
-            }
-            // Check for it in models
-            if(Models.Count > 0 && Models[0].Skeleton != null)
-            {
-                skeleton = Models[0].Skeleton!;
-                return true;
-            }
-            // Check for it in animations
-            if (Animations.Count > 0 && Animations[0].SkeletonAnimation?.Skeleton != null)
-            {
-                skeleton = Animations[0].SkeletonAnimation!.Skeleton!;
-                return true;
-            }
-
-            return false;
+            skeleton = GetFirstInstance<Skeleton>();
+            if(skeleton == null)
+                skeleton = GetFirstInstance<Model>()?.Skeleton;
+            if (skeleton == null)
+                skeleton = GetFirstInstance<Animation>()?.SkeletonAnimation?.Skeleton;
+            return skeleton != null;
         }
     }
 }

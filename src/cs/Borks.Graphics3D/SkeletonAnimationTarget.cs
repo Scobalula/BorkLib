@@ -101,5 +101,26 @@ namespace Borks.Graphics3D
 
             return sample;
         }
+
+        public void AddTranslationFrame(float time, Vector3 value)
+        {
+            if (TranslationFrames == null)
+                TranslationFrames = new();
+            TranslationFrames.Add(new(time, value));
+        }
+
+        public void AddRotationFrame(float time, Quaternion value)
+        {
+            if (RotationFrames == null)
+                RotationFrames = new();
+            RotationFrames.Add(new(time, value));
+        }
+
+        public void AddScaleFrame(float time, Vector3 value)
+        {
+            if (ScaleFrames == null)
+                ScaleFrames = new();
+            ScaleFrames.Add(new(time, value));
+        }
     }
 }

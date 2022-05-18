@@ -1,4 +1,5 @@
 ﻿using System.Numerics;
+using System.Runtime.CompilerServices;
 using System.Text;
 
 namespace Borks.Graphics3D.SMD
@@ -33,17 +34,21 @@ namespace Borks.Graphics3D.SMD
             SMDHelper.Read(smdReader, out var skeleton, out var model, out var animation);
 
             if (skeleton != null)
-                output.Skeletons.Add(skeleton);
+                output.Objects.Add(skeleton);
             if (model != null)
-                output.Models.Add(model);
+                output.Objects.Add(model);
             if (animation != null)
-                output.Animations.Add(animation);
+                output.Objects.Add(animation);
         }
 
         /// <inheritdoc/>
         public override void Write(Stream stream, string filePath, Graphics3DTranslatorIO input)
         {
             using var writer = new StreamWriter(stream);
+
+
+            var model = input.GetFirstInstance<Model>();
+            var animation = input.GetFirstInstance<Animation>();
 
             writer.WriteLine("version 1");
 
@@ -70,12 +75,11 @@ namespace Borks.Graphics3D.SMD
             index = 0;
             foreach (var bone in skeleton.Bones)
             {
-                SMDHelper.WriteFrame(writer, index++, bone.LocalPosition, bone.LocalRotation);
+                SMDHelper.WriteFrame(writer, index++, bone.BaseLocalTranslation, bone.BaseLocalRotation);
             }
             // Check if we have animations
-            if (input.Animations.Count > 0)
+            if (animation != null)
             {
-                var animation = input.Animations[0];
                 if(animation.SkeletonAnimation != null)
                 {
                     var frames = animation.GetAnimationFrameCount();
@@ -113,10 +117,8 @@ namespace Borks.Graphics3D.SMD
             }
             writer.WriteLine("end");
             // Begin Triangles
-            if(input.Models.Count > 0)
+            if(model != null)
             {
-                var model = input.Models[0];
-
                 writer.WriteLine("triangles");
 
                 foreach (var mesh in model.Meshes)

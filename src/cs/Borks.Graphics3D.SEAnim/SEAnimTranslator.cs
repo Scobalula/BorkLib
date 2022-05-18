@@ -221,7 +221,7 @@ namespace Borks.Graphics3D.SEModel
 
             anim.SkeletonAnimation = skelAnim;
 
-            output.Animations.Add(anim);
+            output.Objects.Add(anim);
         }
 
         /// <inheritdoc/>
@@ -230,13 +230,14 @@ namespace Borks.Graphics3D.SEModel
             // Determine bones with different types
             var boneModifiers = new Dictionary<int, byte>();
 
-            var data        = input.Animations.First();
-            var frameCount  = data.GetAnimationFrameCount();
-            var actionCount = data.GetAnimationActionCount();
-            var targetCount = data.SkeletalTargetCount;
-            int index       = 0;
+            var data          = input.GetFirstInstance<Animation>();
+            var frameCount    = data != null ? data.GetAnimationFrameCount() : 0;
+            var actionCount   = data != null ? data.GetAnimationActionCount() : 0;
+            var targetCount   = data != null ? data.SkeletalTargetCount : 0;
+            var transformType = data != null ? data.SkeletalTransformType : TransformType.Absolute;
+            int index         = 0;
 
-            if(data.SkeletonAnimation != null)
+            if(data?.SkeletonAnimation != null)
             {
                 var animationType = data.SkeletalTransformType;
 
@@ -264,7 +265,8 @@ namespace Borks.Graphics3D.SEModel
             writer.Write((ushort)0x1C);
 
             // Convert to SEAnim Type
-            switch (data.SkeletalTransformType)
+
+            switch (transformType)
             {
                 case TransformType.Absolute: writer.Write((byte)0); break;
                 case TransformType.Additive: writer.Write((byte)1); break;
@@ -275,11 +277,11 @@ namespace Borks.Graphics3D.SEModel
 
             byte flags = 0;
 
-            if (data.HasSkeletalTranslationFrames())
+            if (data != null && data.HasSkeletalTranslationFrames())
                 flags |= 1;
-            if (data.HasSkeletalRotationFrames())
+            if (data != null && data.HasSkeletalRotationFrames())
                 flags |= 2;
-            if (data.HasSkeletalScalesFrames())
+            if (data != null && data.HasSkeletalScalesFrames())
                 flags |= 4;
             if (actionCount > 0)
                 flags |= 64;
@@ -287,7 +289,7 @@ namespace Borks.Graphics3D.SEModel
             writer.Write(flags);
             writer.Write((byte)0);
             writer.Write((ushort)0);
-            writer.Write(data.Framerate);
+            writer.Write(data != null ? data.Framerate : 30.0f);
             writer.Write((int)frameCount);
             writer.Write(targetCount);
             writer.Write((byte)boneModifiers.Count);
@@ -295,7 +297,7 @@ namespace Borks.Graphics3D.SEModel
             writer.Write((ushort)0);
             writer.Write(actionCount);
 
-            if (data.SkeletonAnimation != null)
+            if (data?.SkeletonAnimation != null)
             {
                 var targets = data.SkeletonAnimation.Targets;
 
@@ -408,19 +410,22 @@ namespace Borks.Graphics3D.SEModel
                 }
             }
 
-            foreach (var action in data.Actions)
+            if (data != null)
             {
-                foreach (var frame in action.Frames)
+                foreach (var action in data.Actions)
                 {
-                    if (frameCount <= 0xFF)
-                        writer.Write((byte)frame.Time);
-                    else if (frameCount <= 0xFFFF)
-                        writer.Write((ushort)frame.Time);
-                    else
-                        writer.Write((int)frame.Time);
+                    foreach (var frame in action.Frames)
+                    {
+                        if (frameCount <= 0xFF)
+                            writer.Write((byte)frame.Time);
+                        else if (frameCount <= 0xFFFF)
+                            writer.Write((ushort)frame.Time);
+                        else
+                            writer.Write((int)frame.Time);
 
-                    writer.Write(Encoding.UTF8.GetBytes(action.Name));
-                    writer.Write((byte)0);
+                        writer.Write(Encoding.UTF8.GetBytes(action.Name));
+                        writer.Write((byte)0);
+                    }
                 }
             }
         }

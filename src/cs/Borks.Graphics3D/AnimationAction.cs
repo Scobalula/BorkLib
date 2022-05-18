@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -9,6 +10,7 @@ namespace Borks.Graphics3D
     /// <summary>
     /// A class to hold an animation action that executes an action during animation playback.
     /// </summary>
+    [DebuggerDisplay("Name = {Name}")]
     public class AnimationAction
     {
         /// <summary>

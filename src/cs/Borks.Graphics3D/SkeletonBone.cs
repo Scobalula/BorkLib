@@ -52,27 +52,52 @@ namespace Borks.Graphics3D
         /// <summary>
         /// Gets or Sets the bone position relative to its parent.
         /// </summary>
-        public Vector3 LocalPosition { get; set; }
+        public Vector3 BaseLocalTranslation { get; set; }
 
         /// <summary>
         /// Gets or Sets the bone rotation relative to its parent.
         /// </summary>
-        public Quaternion LocalRotation { get; set; }
+        public Quaternion BaseLocalRotation { get; set; }
 
         /// <summary>
         /// Gets or Sets the bone position relative to the origin.
         /// </summary>
-        public Vector3 GlobalPosition { get; set; }
+        public Vector3 BaseWorldTranslation { get; set; }
 
         /// <summary>
         /// Gets or Sets the bone rotation relative to the origin.
         /// </summary>
-        public Quaternion GlobalRotation { get; set; }
+        public Quaternion BaseWorldRotation { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the current bone position relative to its parent.
+        /// </summary>
+        public Vector3 CurrentLocalTranslation { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the current bone rotation relative to its parent.
+        /// </summary>
+        public Quaternion CurrentLocalRotation { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the current bone position relative to the origin.
+        /// </summary>
+        public Vector3 CurrentWorldTranslation { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the current bone rotation relative to the origin.
+        /// </summary>
+        public Quaternion CurrentWorldRotation { get; set; }
 
         /// <summary>
         /// Gets or Sets the scale.
         /// </summary>
-        public Vector3 Scale { get; set; }
+        public Vector3 BaseScale { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the scale.
+        /// </summary>
+        public Vector3 CurrentScale { get; set; }
 
         public SkeletonBone(string name)
         {
@@ -138,27 +163,65 @@ namespace Borks.Graphics3D
         {
             if (Parent != null)
             {
-                LocalRotation = Quaternion.Conjugate(Parent.GlobalRotation) * GlobalRotation;
-                LocalPosition = Vector3.Transform(GlobalPosition - Parent.GlobalPosition, Quaternion.Conjugate(Parent.GlobalRotation));
+                BaseLocalRotation = Quaternion.Conjugate(Parent.BaseWorldRotation) * BaseWorldRotation;
+                BaseLocalTranslation = Vector3.Transform(BaseWorldTranslation - Parent.BaseWorldTranslation, Quaternion.Conjugate(Parent.BaseWorldRotation));
             }
             else
             {
-                LocalPosition = GlobalPosition;
-                LocalRotation = GlobalRotation;
+                BaseLocalTranslation = BaseWorldTranslation;
+                BaseLocalRotation = BaseWorldRotation;
             }
         }
 
-        public void GenerateGlobalTransform()
+        public void GenerateWorldTransform()
         {
             if (Parent != null)
             {
-                GlobalRotation = Parent.GlobalRotation * LocalRotation;
-                GlobalPosition = Vector3.Transform(LocalPosition, Parent.GlobalRotation) + Parent.GlobalPosition;
+                BaseWorldRotation = Parent.BaseWorldRotation * BaseLocalRotation;
+                BaseWorldTranslation = Vector3.Transform(BaseLocalTranslation, Parent.BaseWorldRotation) + Parent.BaseWorldTranslation;
             }
             else
             {
-                GlobalPosition = LocalPosition;
-                GlobalRotation = LocalRotation;
+                BaseWorldTranslation = BaseLocalTranslation;
+                BaseWorldRotation = BaseLocalRotation;
+            }
+        }
+
+        public void GenerateCurrentLocalTransform()
+        {
+            if (Parent != null)
+            {
+                CurrentLocalRotation = Quaternion.Conjugate(Parent.CurrentWorldRotation) * CurrentWorldRotation;
+                CurrentLocalTranslation = Vector3.Transform(CurrentWorldTranslation - Parent.CurrentWorldTranslation, Quaternion.Conjugate(Parent.CurrentWorldRotation));
+            }
+            else
+            {
+                CurrentLocalTranslation = CurrentWorldTranslation;
+                CurrentLocalRotation = CurrentWorldRotation;
+            }
+        }
+
+        public void GenerateCurrentWorldTransform()
+        {
+            if (Parent != null)
+            {
+                CurrentWorldRotation = Parent.CurrentWorldRotation * CurrentLocalRotation;
+                CurrentWorldTranslation = Vector3.Transform(CurrentLocalTranslation, Parent.CurrentWorldRotation) + Parent.CurrentWorldTranslation;
+            }
+            else
+            {
+                CurrentWorldTranslation = CurrentLocalTranslation;
+                CurrentWorldRotation = CurrentLocalRotation;
+            }
+        }
+
+        public void GenerateCurrentWorldTransforms()
+        {
+            GenerateCurrentWorldTransform();
+
+            foreach (var child in Children)
+            {
+                child.GenerateCurrentWorldTransforms();
             }
         }
 

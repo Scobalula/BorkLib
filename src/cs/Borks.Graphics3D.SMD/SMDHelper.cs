@@ -126,11 +126,11 @@ namespace Borks.Graphics3D.SMD
                             // Set the first frame to our bone's base
                             TranslationFrames = new()
                             {
-                                new(0, bone.LocalPosition)
+                                new(0, bone.BaseLocalTranslation)
                             },
                             RotationFrames = new()
                             {
-                                new(0, bone.LocalRotation)
+                                new(0, bone.BaseLocalRotation)
                             }
                         };
 
@@ -164,8 +164,8 @@ namespace Borks.Graphics3D.SMD
                 else
                 {
 
-                    skeleton.Bones[boneID].LocalPosition = position;
-                    skeleton.Bones[boneID].LocalRotation = toQuat;
+                    skeleton.Bones[boneID].BaseLocalTranslation = position;
+                    skeleton.Bones[boneID].BaseLocalRotation = toQuat;
                 }
             }
         }

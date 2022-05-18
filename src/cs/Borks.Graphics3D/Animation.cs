@@ -9,7 +9,7 @@ namespace Borks.Graphics3D
     /// <summary>
     /// A class to hold a 3D Animation that animations skeletons and/or other data.
     /// </summary>
-    public class Animation
+    public class Animation : Graphics3DObject
     {
         /// <summary>
         /// Gets or Sets the skeleton animation stored within this animation.

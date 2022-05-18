@@ -10,7 +10,7 @@ namespace Borks.Graphics3D
     /// <summary>
     /// A class that defines 
     /// </summary>
-    public class Skeleton
+    public class Skeleton : Graphics3DObject
     {
         /// <summary>
         /// Gets or Sets the bones stored within this skeleton.
@@ -111,7 +111,7 @@ namespace Borks.Graphics3D
         {
             foreach (var bone in EnumerateBones())
             {
-                bone.GenerateGlobalTransform();
+                bone.GenerateWorldTransform();
             }
         }
 
