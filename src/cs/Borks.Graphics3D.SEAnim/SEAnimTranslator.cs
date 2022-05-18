@@ -1,7 +1,7 @@
 ﻿using System.Numerics;
 using System.Text;
 
-namespace Borks.Graphics3D.SEModel
+namespace Borks.Graphics3D.SEAnim
 {
     /// <summary>
     /// A class to handle translating data from SEAnim files.

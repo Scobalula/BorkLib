@@ -9,7 +9,7 @@ namespace Borks.Graphics3D
     /// <summary>
     /// A class to hold a pointer to a texture file.
     /// </summary>
-    public class Texture
+    public class Texture : Graphics3DObject
     {
         /// <summary>
         /// Gets or Sets the name of the texture.
