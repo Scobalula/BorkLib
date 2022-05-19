@@ -57,5 +57,24 @@ namespace Borks.Graphics3D
                 skeleton = GetFirstInstance<Animation>()?.SkeletonAnimation?.Skeleton;
             return skeleton != null;
         }
+
+        public IEnumerable<T> EnumerateObjectsOfType<T>() where T : Graphics3DObject
+        {
+            var type = typeof(T);
+
+            foreach (var obj in Objects)
+            {
+                if(obj.GetType() == type)
+                {
+                    yield return (T)obj;
+                }
+            }
+        }
+
+        public Graphics3DTranslatorIO Clear()
+        {
+            Objects.Clear();
+            return this;
+        }
     }
 }

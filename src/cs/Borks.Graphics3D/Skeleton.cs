@@ -22,6 +22,19 @@ namespace Borks.Graphics3D
             Bones = new();
         }
 
+        public SkeletonBone? GetFirstRoot()
+        {
+            foreach (var bone in Bones)
+            {
+                if(bone.Parent == null)
+                {
+                    return bone;
+                }
+            }
+
+            return null;
+        }
+
         /// <summary>
         /// Gets the bone by name.
         /// </summary>
@@ -124,6 +137,29 @@ namespace Borks.Graphics3D
             {
                 Bones[i].Index = i;
             }
+        }
+
+        public Skeleton CreateCopy()
+        {
+            var newSkeleton = new Skeleton();
+            var bones = new SkeletonBone[Bones.Count];
+
+            foreach(var bone in EnumerateBones())
+            {
+                newSkeleton.Bones[bone.Index] = new SkeletonBone(bone.Name)
+                {
+                    Index                = bone.Index,
+                    Parent               = bone.Parent != null ? bones.First(x => x.Name == bone.Parent?.Name) : null,
+                    BaseLocalTranslation = bone.BaseLocalTranslation,
+                    BaseLocalRotation    = bone.BaseLocalRotation,
+                    BaseWorldTranslation = bone.BaseWorldTranslation,
+                    BaseWorldRotation    = bone.BaseWorldRotation,
+                    BaseScale            = bone.BaseScale,
+                };
+            }
+
+            newSkeleton.Bones = bones.ToList();
+            return newSkeleton;
         }
     }
 }

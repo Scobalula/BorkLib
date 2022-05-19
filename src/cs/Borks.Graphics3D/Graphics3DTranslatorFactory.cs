@@ -151,6 +151,23 @@ namespace Borks.Graphics3D
             return Load<T>(stream, filePath);
         }
 
+        public bool TryLoad<T>(Stream stream, string name, [NotNullWhen(true)] out T? result) where T : Graphics3DObject
+        {
+            var io = new Graphics3DTranslatorIO();
+
+            if (!TryLoadStream(stream, name, io))
+                throw new NotSupportedException();
+
+            result = io.GetFirstInstance<T>();
+            return result != null;
+        }
+
+        public bool TryLoad<T>(string filePath,[NotNullWhen(true)] out T? result) where T : Graphics3DObject
+        {
+            using var stream = File.OpenRead(filePath);
+            return TryLoad(stream, filePath, out result);
+        }
+
         public void Save<T>(Stream stream, string name, T data) where T : Graphics3DObject
         {
             if (!TrySaveStream(stream, name, new(data)))

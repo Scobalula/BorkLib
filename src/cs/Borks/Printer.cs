@@ -23,9 +23,7 @@
 // File: Printer.cs
 // Author: Philip/Scobalula
 // Description: A static class that provides methods for printing data to the console in a structered format.
-using System;
 using System.Diagnostics;
-using System.IO;
 
 namespace Borks
 {

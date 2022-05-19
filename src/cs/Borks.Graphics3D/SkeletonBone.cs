@@ -99,10 +99,20 @@ namespace Borks.Graphics3D
         /// </summary>
         public Vector3 CurrentScale { get; set; }
 
+        /// <summary>
+        /// Gets or Sets if this bone can be animated.
+        /// </summary>
+        public bool CanAnimate { get; set; }
+
+        /// <summary>
+        /// 
+        /// </summary>
+        /// <param name="name"></param>
         public SkeletonBone(string name)
         {
             Name = name;
             Children = new();
+            CanAnimate = true;
         }
 
         /// <summary>

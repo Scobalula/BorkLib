@@ -89,7 +89,7 @@ namespace Borks.Graphics3D.SEModel
 
                 if (hasWorldTransforms)
                 {
-                    bone.BaseLocalTranslation = new Vector3(
+                    bone.BaseWorldTranslation = new Vector3(
                         reader.ReadSingle() * scale,
                         reader.ReadSingle() * scale,
                         reader.ReadSingle() * scale);
@@ -162,8 +162,6 @@ namespace Borks.Graphics3D.SEModel
                 var influences = reader.ReadByte();
                 var vertexCount = reader.ReadInt32();
                 var faceCount = reader.ReadInt32();
-
-                Console.WriteLine(vertexCount);
 
                 var mesh = new Mesh();
 

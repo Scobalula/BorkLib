@@ -61,10 +61,10 @@ namespace Borks.Graphics3D.AnimationSampling
         /// </summary>
         public void Update()
         {
-            var translationAtFrame = Bone.CurrentLocalTranslation;
-            var rotationAtFrame = Bone.CurrentLocalRotation;
+            var translationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalTranslation : Bone.BaseLocalTranslation;
+            var rotationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalRotation : Bone.BaseLocalRotation;
 
-            if (Target != null)
+            if (Target != null && Bone.CanAnimate)
             {
                 var bone = Target;
                 var time = Owner.Owner.CurrentTime;

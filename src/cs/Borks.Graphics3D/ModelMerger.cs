@@ -184,9 +184,6 @@ namespace Borks.Graphics3D
                         var newMesh = new Mesh(mesh);
                         var vertexCount = newMesh.Positions.Count;
 
-                        Console.WriteLine(mesh.Positions.Count);
-                        Console.WriteLine(newMesh.Positions.Count);
-
                         for (int i = 0; i < vertexCount; i++)
                         {
                             newMesh.Positions[i] = Vector3.Transform(newMesh.Positions[i], rotation) + translation;
@@ -251,6 +248,121 @@ namespace Borks.Graphics3D
 
             // Ensure our indices assigned to bones are correct
             root.AssignSkeletonBoneIndices();
+        }
+
+        public static bool Attach(Model root, Model toConnect, string targetBoneName)
+        {
+            if (root.Skeleton == null)
+                return false;
+            if (toConnect.Skeleton == null)
+                return false;
+            if (!root.Skeleton.TryGetBone(targetBoneName, out var targetBone))
+                return false;
+
+            var rootSkeleton = root.Skeleton;
+            var currSkeleton = toConnect.Skeleton;
+
+            // Connect to new bone
+            var rootBone = currSkeleton.GetFirstRoot();
+
+            if (rootBone == null)
+                return false;
+
+            // New parent
+            currSkeleton.GenerateGlobalTransforms();
+
+            // Copy over bones
+            foreach (var bone in currSkeleton.Bones)
+            {
+                if (!rootSkeleton.ContainsBone(bone.Name))
+                {
+                    var nBone = new SkeletonBone(bone.Name)
+                    {
+                        BaseLocalTranslation = bone.BaseLocalTranslation,
+                        BaseLocalRotation = bone.BaseLocalRotation,
+                        Index = rootSkeleton.Bones.Count,
+                        Parent = bone.Parent == null ? targetBone : rootSkeleton.GetBone(bone.Parent?.Name),
+                        CanAnimate = bone.CanAnimate
+                    };
+
+                    rootSkeleton.Bones.Add(nBone);
+                }
+            }
+
+            // Compute global positions (we need them for offsetting)
+            rootSkeleton.GenerateGlobalTransforms();
+            currSkeleton.GenerateGlobalTransforms();
+
+            // Get root and the new root, to compute offsets
+            var newRoot = root.Skeleton.GetBone(rootBone.Name)!;
+
+            var translation = newRoot.BaseWorldTranslation - rootBone.BaseWorldTranslation;
+            var rotation = (newRoot.BaseWorldRotation * Quaternion.Inverse(rootBone.BaseWorldRotation));
+
+            // Now lets process each mesh
+            foreach (var mesh in toConnect.Meshes)
+            {
+                var newMesh = new Mesh(mesh);
+                var vertexCount = newMesh.Positions.Count;
+
+                for (int i = 0; i < vertexCount; i++)
+                {
+                    newMesh.Positions[i] = Vector3.Transform(newMesh.Positions[i], rotation) + translation;
+
+                    if (newMesh.Normals.ElementCount != 0)
+                        newMesh.Normals[i] = Vector3.Normalize(Vector3.Transform(newMesh.Normals[i], rotation));
+                    if (newMesh.Tangents.ElementCount != 0)
+                        newMesh.Tangents[i] = Vector3.Normalize(Vector3.Transform(newMesh.Tangents[i], rotation));
+                    if (newMesh.BiTangents.ElementCount != 0)
+                        newMesh.BiTangents[i] = Vector3.Normalize(Vector3.Transform(newMesh.BiTangents[i], rotation));
+
+                    // Remap influences to the new skeleton if we have any
+                    if (newMesh.Influences.ElementCount != 0)
+                    {
+                        for (int v = 0; v < newMesh.Influences.Dimension; v++)
+                        {
+                            var (index, weight) = newMesh.Influences[i, v];
+
+                            // Weights are null terminated by influence
+                            if (weight == 0)
+                                break;
+
+                            newMesh.Influences[i, v] = (rootSkeleton.GetBoneIndex(currSkeleton.Bones[index].Name), weight);
+                        }
+                    }
+                    else
+                    {
+                        newMesh.Influences.Clear();
+                    }
+                }
+
+                // Finally let's remap materials
+                for (int i = 0; i < newMesh.Materials.Count; i++)
+                {
+                    // Check our material for existing one
+                    // and update this mesh accordingly
+                    var curMaterial = newMesh.Materials[i];
+                    var newMaterial = root.Materials.Find(x => x.Name.Equals(curMaterial.Name));
+
+                    if (newMaterial == null)
+                    {
+                        newMaterial = new Material(curMaterial.Name);
+
+                        foreach (var (type, texture) in curMaterial.Textures)
+                        {
+                            newMaterial.Textures.Add(type, new(texture.FilePath, type));
+                        }
+
+                        root.Materials.Add(newMaterial);
+                    }
+
+                    newMesh.Materials[i] = newMaterial;
+                }
+
+                root.Meshes.Add(newMesh);
+            }
+
+            return true;
         }
     }
 }

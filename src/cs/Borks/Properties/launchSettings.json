@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "Borks": {
+      "commandName": "Project",
+      "commandLineArgs": "--rig \"C:\\Prj\\VS\\GramGram\\test\\Rig\\c_s4_vm_mp_usa_lion_01\\c_s4_vm_mp_usa_lion_01_LOD0.semodel\""
+    }
+  }
+}
