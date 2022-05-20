@@ -22,16 +22,6 @@ namespace Borks.Graphics3D.AnimationSampling
         public SkeletonAnimationSampler? SkeletonAnimationSampler { get; set; }
 
         /// <summary>
-        /// Gets the length of the animation
-        /// </summary>
-        public float Framerate { get; private set; }
-
-        /// <summary>
-        /// Gets the length of the animation.
-        /// </summary>
-        public float Length { get; private set; }
-
-        /// <summary>
         /// Gets the current time.
         /// </summary>
         public float CurrentTime { get; private set; }
@@ -51,13 +41,35 @@ namespace Borks.Graphics3D.AnimationSampling
         /// </summary>
         private int CurrentWeightsCursor { get; set; }
 
+        /// <summary>
+        /// Gets the number of frames in the animation.
+        /// </summary>
+        public float FrameCount { get; set; }
+
+        /// <summary>
+        /// Gets or Sets the playback framerate.
+        /// </summary>
+        public float FrameRate { get; set; }
+
+        /// <summary>
+        /// Gets the length of the animation.
+        /// </summary>
+        public float Length => FrameCount / FrameRate;
+
+        /// <summary>
+        /// Gets the length of each frame.
+        /// </summary>
+        public float FrameTime => 1.0f / FrameRate;
 
         public AnimationSampler(Animation animation)
         {
             Animation = animation;
             Weights = new();
+            FrameRate = animation.Framerate;
+            FrameCount = animation.GetAnimationFrameCount();
+            CurrentWeight = 1.0f;
 
-            if(Animation.SkeletonAnimation != null)
+            if (Animation.SkeletonAnimation != null)
             {
                 // If we didn't get passed a skeleton, we require one from
                 // the animation.
@@ -71,15 +83,22 @@ namespace Borks.Graphics3D.AnimationSampling
             }
         }
 
-        public AnimationSampler(Animation animation, Skeleton skeleton)
+        public AnimationSampler(Animation animation, Skeleton? skeleton)
         {
             Animation = animation;
-            Framerate = animation.Framerate;
-            CurrentWeight = 1.0f;
             Weights = new();
+            FrameRate = animation.Framerate;
+            FrameCount = animation.GetAnimationFrameCount();
+            CurrentWeight = 1.0f;
 
             if (Animation.SkeletonAnimation != null)
             {
+                // If we didn't get passed a skeleton, we require one from
+                // the animation.
+                if (skeleton == null)
+                    skeleton = Animation.SkeletonAnimation.Skeleton;
+                if (skeleton == null)
+                    throw new Exception();
                 SkeletonAnimationSampler = new(
                     this,
                     Animation.SkeletonAnimation,
@@ -93,14 +112,17 @@ namespace Borks.Graphics3D.AnimationSampling
         {
             switch(type)
             {
+                case AnimationSampleType.Percentage:
+                    CurrentTime = Length * time;
+                    break;
                 case AnimationSampleType.AbsoluteFrameTime:
                     CurrentTime = time;
                     break;
                 case AnimationSampleType.AbsoluteTime:
-                    CurrentTime = time * Framerate;
+                    CurrentTime = time * FrameRate;
                     break;
                 case AnimationSampleType.DeltaTime:
-                    CurrentTime += time * Framerate;
+                    CurrentTime += time * FrameRate;
                     break;
             }
 
@@ -111,7 +133,8 @@ namespace Borks.Graphics3D.AnimationSampling
             CurrentWeightsCursor = cursor;
 
             // Update sub-samplers
-            SkeletonAnimationSampler?.Update();
+            if(CurrentWeight != 0)
+                SkeletonAnimationSampler?.Update();
         }
     }
 }

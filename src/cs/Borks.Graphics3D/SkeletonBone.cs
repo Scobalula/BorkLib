@@ -245,5 +245,13 @@ namespace Borks.Graphics3D
                 parent = parent.Parent;
             }
         }
+
+        public void InitializeAnimationTransforms()
+        {
+            CurrentLocalRotation    = BaseLocalRotation;
+            CurrentLocalTranslation = BaseLocalTranslation;
+            CurrentWorldTranslation = BaseWorldTranslation;
+            CurrentWorldRotation    = BaseWorldRotation;
+        }
     }
 }

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Diagnostics.CodeAnalysis;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -30,6 +31,12 @@ namespace Borks.Graphics3D
         /// Gets the number of skeletal animation targets.
         /// </summary>
         public int SkeletalTargetCount => SkeletonAnimation != null ? SkeletonAnimation.Targets.Count : 0;
+
+        public bool TryGetAction(string v,[NotNullWhen(true)] out AnimationAction? action)
+        {
+            action = Actions.Find(x => x.Name.Equals(v));
+            return action != null;
+        }
 
         /// <summary>
         /// Gets the skeletal animation transform type.

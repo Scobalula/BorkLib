@@ -39,14 +39,10 @@ namespace Borks.Graphics3D.AnimationSampling
             Animation = skeletonAnimation;
             TargetSamplers = new();
 
+            Skeleton.InitializeAnimationTransforms();
+
             foreach(var bone in skeleton.EnumerateBones())
             {
-                // Reset our transforms
-                bone.CurrentLocalTranslation = bone.BaseLocalTranslation;
-                bone.CurrentLocalRotation = bone.BaseLocalRotation;
-                bone.CurrentWorldTranslation = bone.BaseWorldTranslation;
-                bone.CurrentWorldRotation = bone.BaseWorldRotation;
-
                 // Attempt to find a target
                 var targetIndex = Animation.Targets.FindIndex(x =>
                 {
@@ -54,6 +50,7 @@ namespace Borks.Graphics3D.AnimationSampling
                         bone.Name, 
                         StringComparison.CurrentCultureIgnoreCase);
                 });
+
                 SkeletonAnimationTarget? target = null;
 
                 if (targetIndex != -1)
@@ -67,6 +64,13 @@ namespace Borks.Graphics3D.AnimationSampling
             }
         }
 
+        public void SetTransformType(TransformType type)
+        {
+            foreach (var targetSampler in TargetSamplers)
+            {
+                targetSampler.Value.TransformType = type;
+            }
+        }
 
         public void Update()
         {

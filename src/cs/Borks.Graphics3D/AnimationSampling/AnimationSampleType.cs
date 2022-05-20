@@ -11,8 +11,9 @@ namespace Borks.Graphics3D.AnimationSampling
     /// </summary>
     public enum AnimationSampleType
     {
+        Percentage,
         AbsoluteFrameTime,
-            AbsoluteTime,
-            DeltaTime,
+        AbsoluteTime,
+        DeltaTime,
     }
 }

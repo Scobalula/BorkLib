@@ -30,7 +30,7 @@ namespace Borks.Graphics3D.AnimationSampling
         /// <summary>
         /// Gets the transform type.
         /// </summary>
-        public TransformType TransformType { get; private set; }
+        public TransformType TransformType { get; internal set; }
 
         /// <summary>
         /// Gets or Sets the Translations Cursor
@@ -61,11 +61,11 @@ namespace Borks.Graphics3D.AnimationSampling
         /// </summary>
         public void Update()
         {
-            var translationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalTranslation : Bone.BaseLocalTranslation;
-            var rotationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalRotation : Bone.BaseLocalRotation;
-
             if (Target != null && Bone.CanAnimate)
             {
+                var translationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalTranslation : Bone.BaseLocalTranslation;
+                var rotationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalRotation : Bone.BaseLocalRotation;
+
                 var bone = Target;
                 var time = Owner.Owner.CurrentTime;
 
@@ -148,10 +148,12 @@ namespace Borks.Graphics3D.AnimationSampling
                     // Update cursor (to speed up linear sampling if we're going forward)
                     CurrentTranslationsCursor = firstTIndex;
                 }
+
+                Bone.CurrentLocalTranslation = translationAtFrame;
+                Bone.CurrentLocalRotation = rotationAtFrame;
+                Bone.GenerateCurrentWorldTransform();
             }
 
-            Bone.CurrentLocalTranslation = translationAtFrame;
-            Bone.CurrentLocalRotation = rotationAtFrame;
             Bone.GenerateCurrentWorldTransform();
         }
     }

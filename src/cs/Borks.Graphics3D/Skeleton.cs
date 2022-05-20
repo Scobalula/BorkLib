@@ -146,20 +146,41 @@ namespace Borks.Graphics3D
 
             foreach(var bone in EnumerateBones())
             {
-                newSkeleton.Bones[bone.Index] = new SkeletonBone(bone.Name)
+                bones[bone.Index] = new SkeletonBone(bone.Name)
                 {
-                    Index                = bone.Index,
-                    Parent               = bone.Parent != null ? bones.First(x => x.Name == bone.Parent?.Name) : null,
-                    BaseLocalTranslation = bone.BaseLocalTranslation,
-                    BaseLocalRotation    = bone.BaseLocalRotation,
-                    BaseWorldTranslation = bone.BaseWorldTranslation,
-                    BaseWorldRotation    = bone.BaseWorldRotation,
-                    BaseScale            = bone.BaseScale,
+                    Index                   = bone.Index,
+                    Parent                  = bone.Parent != null ? bones.First(x => x?.Name == bone.Parent?.Name) : null,
+                    BaseLocalTranslation    = bone.BaseLocalTranslation,
+                    BaseLocalRotation       = bone.BaseLocalRotation,
+                    BaseWorldTranslation    = bone.BaseWorldTranslation,
+                    BaseWorldRotation       = bone.BaseWorldRotation,
+                    CurrentLocalRotation    = bone.BaseLocalRotation,
+                    CurrentLocalTranslation = bone.BaseLocalTranslation,
+                    CurrentWorldRotation    = bone.BaseWorldRotation,
+                    CurrentWorldTranslation = bone.BaseWorldTranslation,
+                    BaseScale               = bone.BaseScale,
+                    CanAnimate              = bone.CanAnimate
                 };
             }
 
             newSkeleton.Bones = bones.ToList();
             return newSkeleton;
+        }
+
+        public void InitializeAnimationTransforms()
+        {
+            foreach (var bone in Bones)
+            {
+                bone.InitializeAnimationTransforms();
+            }
+        }
+
+        public void Update()
+        {
+            foreach (var bone in EnumerateBones())
+            {
+                bone.GenerateCurrentWorldTransform();
+            }
         }
     }
 }
