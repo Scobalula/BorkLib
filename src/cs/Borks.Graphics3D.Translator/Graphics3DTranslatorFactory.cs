@@ -1,12 +1,17 @@
-﻿using System;
+﻿using Borks.Graphics3D.SEAnim;
+using Borks.Graphics3D.SEModel;
+using Borks.Graphics3D.SMD;
+using System;
 using System.Collections.Generic;
 using System.Diagnostics.CodeAnalysis;
 using System.Globalization;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Borks.Graphics3D
+namespace Borks.Graphics3D.Translator
 {
     /// <summary>
     /// A class to handle obtaining valid a <see cref="Graphics3DTranslator"/> given arbitrary data.
@@ -25,6 +30,32 @@ namespace Borks.Graphics3D
         public void RegisterTranslator(Graphics3DTranslator translator)
         {
             Translators.Add(translator);
+        }
+
+        /// <summary>
+        /// Registers the provided translator for use in file translation.
+        /// </summary>
+        /// <param name="translator">The translator to register.</param>
+        /// <returns>The current <see cref="Graphics3DTranslatorFactory"/>.</returns>
+        public Graphics3DTranslatorFactory WithTranslator(Graphics3DTranslator translator)
+        {
+            RegisterTranslator(translator);
+            return this;
+        }
+
+        /// <summary>
+        /// Registers default translators that Borks supports.
+        /// </summary>
+        /// <returns>The current <see cref="Graphics3DTranslatorFactory"/>.</returns>
+        public Graphics3DTranslatorFactory WithDefaultTranslators()
+        {
+            Translators.Add(new SEAnimTranslator());
+            Translators.Add(new SEModelTranslator());
+            Translators.Add(new SMDTranslator());
+            Translators.Add(new CoDXAnimTranslator());
+            Translators.Add(new CoDXModelTranslator());
+
+            return this;
         }
 
         /// <summary>
@@ -135,12 +166,12 @@ namespace Borks.Graphics3D
             var io = new Graphics3DTranslatorIO();
 
             if (!TryLoadStream(stream, name, io))
-                throw new NotSupportedException();
+                throw new Unknown3DFileFormatException();
 
             var result = io.Objects.FirstOrDefault(x => x.GetType() == type);
 
             if (result == null)
-                throw new Exception();
+                throw new Empty3DFileException();
 
             return (T)result;
         }
@@ -156,7 +187,7 @@ namespace Borks.Graphics3D
             var io = new Graphics3DTranslatorIO();
 
             if (!TryLoadStream(stream, name, io))
-                throw new NotSupportedException();
+                throw new Unknown3DFileFormatException();
 
             result = io.GetFirstInstance<T>();
             return result != null;
@@ -171,7 +202,7 @@ namespace Borks.Graphics3D
         public void Save<T>(Stream stream, string name, T data) where T : Graphics3DObject
         {
             if (!TrySaveStream(stream, name, new(data)))
-                throw new Exception();
+                throw new Unknown3DFileFormatException();
         }
 
         public void Save<T>(string filePath, T data) where T : Graphics3DObject

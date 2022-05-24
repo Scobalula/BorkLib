@@ -33,6 +33,11 @@ namespace Borks.Graphics3D.AnimationSampling
         public TransformType TransformType { get; internal set; }
 
         /// <summary>
+        /// Gets the transform space.
+        /// </summary>
+        public TransformSpace TransformSpace { get; internal set; }
+
+        /// <summary>
         /// Gets or Sets the Translations Cursor
         /// </summary>
         private int CurrentTranslationsCursor { get; set; }
@@ -48,12 +53,13 @@ namespace Borks.Graphics3D.AnimationSampling
         /// <param name="owner"></param>
         /// <param name="bone"></param>
         /// <param name="target"></param>
-        public SkeletonAnimationTargetSampler(SkeletonAnimationSampler owner, SkeletonBone bone, SkeletonAnimationTarget? target, TransformType transformType)
+        public SkeletonAnimationTargetSampler(SkeletonAnimationSampler owner, SkeletonBone bone, SkeletonAnimationTarget? target, TransformType transformType, TransformSpace transformSpace)
         {
             Owner = owner;
             Bone = bone;
             Target = target;
             TransformType = transformType;
+            TransformSpace = transformSpace;
         }
 
         /// <summary>
@@ -61,23 +67,22 @@ namespace Borks.Graphics3D.AnimationSampling
         /// </summary>
         public void Update()
         {
+            var isLocal = TransformSpace == TransformSpace.Local;
+
             if (Target != null && Bone.CanAnimate)
             {
-                var translationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalTranslation : Bone.BaseLocalTranslation;
-                var rotationAtFrame = TransformType == TransformType.Additive ? Bone.CurrentLocalRotation : Bone.BaseLocalRotation;
-
                 var bone = Target;
                 var time = Owner.Owner.CurrentTime;
 
                 var (firstRIndex, secondRIndex) = AnimationHelper.GetFramePairIndex(
                     bone.RotationFrames,
                     time,
-                    0,
+                    Owner.Owner.StartFrame,
                     cursor: CurrentRotationsCursor);
                 var (firstTIndex, secondTIndex) = AnimationHelper.GetFramePairIndex(
                     bone.TranslationFrames,
                     time,
-                    0,
+                    Owner.Owner.StartFrame,
                     cursor: CurrentTranslationsCursor);
 
                 // We have a rotation
@@ -92,24 +97,19 @@ namespace Borks.Graphics3D.AnimationSampling
                     if (firstRIndex == secondRIndex)
                         rot = bone.RotationFrames[firstRIndex].Value;
                     else
-                        rot = Quaternion.Slerp(firstFrame.Value, secondFrame.Value, (time - firstFrame.Time) / (secondFrame.Time - firstFrame.Time));
+                        rot = Quaternion.Slerp(firstFrame.Value, secondFrame.Value, (time - (Owner.Owner.StartFrame + firstFrame.Time)) / ((Owner.Owner.StartFrame + secondFrame.Time) - (Owner.Owner.StartFrame + firstFrame.Time)));
 
-                    Quaternion result = rotationAtFrame;
-
-                    switch (TransformType)
+                    Quaternion result = TransformType switch
                     {
-                        case TransformType.Additive:
-                            // Add to current frame
-                            result *= rot;
-                            break;
-                        default:
-                            // Take literal value
-                            result = rot;
-                            break;
-                    }
+                        TransformType.Additive => Bone.CurrentLocalRotation * rot,
+                        _                      => rot,
+                    };
 
                     // Blend between
-                    rotationAtFrame = Quaternion.Slerp(rotationAtFrame, result, Owner.Owner.CurrentWeight);
+                    if(isLocal)
+                        Bone.CurrentLocalRotation = Quaternion.Slerp(Bone.CurrentLocalRotation, result, Owner.Owner.CurrentWeight);
+                    else
+                        Bone.CurrentWorldRotation = Quaternion.Slerp(Bone.CurrentWorldRotation, result, Owner.Owner.CurrentWeight);
                     // Update cursor (to speed up linear sampling if we're going forward)
                     CurrentRotationsCursor = firstRIndex;
                 }
@@ -121,40 +121,33 @@ namespace Borks.Graphics3D.AnimationSampling
 
                     Vector3 translation;
 
-                    Vector3 result = translationAtFrame;
-
                     // Identical Frames, no interpolating
                     if (firstTIndex == secondTIndex)
                         translation = bone.TranslationFrames[firstTIndex].Value;
                     else
-                        translation = Vector3.Lerp(firstFrame.Value, secondFrame.Value, (time - firstFrame.Time) / (secondFrame.Time - firstFrame.Time));
-
-                    switch (TransformType)
+                        translation = Vector3.Lerp(firstFrame.Value, secondFrame.Value, (time - (Owner.Owner.StartFrame + firstFrame.Time)) / ((Owner.Owner.StartFrame + secondFrame.Time) - (Owner.Owner.StartFrame + firstFrame.Time)));
+                    
+                    var result = TransformType switch
                     {
-                        case TransformType.Additive:
-                            result += translation;
-                            break;
-                        case TransformType.Relative:
-                            result = Bone.BaseLocalTranslation + translation;
-                            break;
-                        default:
-                            // Take literal
-                            result = translation;
-                            break;
-                    }
+                        TransformType.Additive => Bone.CurrentLocalTranslation + translation,
+                        TransformType.Relative => Bone.BaseLocalTranslation + translation,
+                        _                      => translation,
+                    };
 
                     // Blend between
-                    translationAtFrame = Vector3.Lerp(translationAtFrame, result, Owner.Owner.CurrentWeight);
+                    if(isLocal)
+                        Bone.CurrentLocalTranslation = Vector3.Lerp(Bone.CurrentLocalTranslation, result, Owner.Owner.CurrentWeight);
+                    else
+                        Bone.CurrentWorldTranslation = Vector3.Lerp(Bone.CurrentWorldTranslation, result, Owner.Owner.CurrentWeight);
                     // Update cursor (to speed up linear sampling if we're going forward)
                     CurrentTranslationsCursor = firstTIndex;
                 }
-
-                Bone.CurrentLocalTranslation = translationAtFrame;
-                Bone.CurrentLocalRotation = rotationAtFrame;
-                Bone.GenerateCurrentWorldTransform();
             }
 
-            Bone.GenerateCurrentWorldTransform();
+            if (isLocal)
+                Bone.GenerateCurrentWorldTransform();
+            else
+                Bone.GenerateCurrentLocalTransform();
         }
     }
 }

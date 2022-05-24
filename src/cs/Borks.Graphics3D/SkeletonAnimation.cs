@@ -26,13 +26,18 @@ namespace Borks.Graphics3D
         /// </summary>
         public TransformType TransformType { get; set; }
 
+        /// <summary>
+        /// Gets or Sets the transform space.
+        /// </summary>
+        public TransformSpace TransformSpace { get; set; }
+
         public SkeletonAnimation()
         {
             Targets = new();
             TransformType = TransformType.Unknown;
         }
 
-        public SkeletonAnimation(Skeleton skeleton)
+        public SkeletonAnimation(Skeleton? skeleton)
         {
             Skeleton = skeleton;
             Targets = new();

@@ -18,7 +18,7 @@ namespace Borks.Graphics3D
         /// <summary>
         /// Gets or Sets the main layer.
         /// </summary>
-        private AnimationSampler? MainLayer { get; set; }
+        public AnimationSampler MainLayer { get; set; }
 
         /// <summary>
         /// Gets or Sets the layers.
@@ -52,20 +52,62 @@ namespace Borks.Graphics3D
 
         public AnimationPlayer(Animation anim, Skeleton? skeleton)
         {
-            Skeleton = skeleton?.CreateCopy();
+            Skeleton = skeleton;
             MainLayer = new(anim, Skeleton);
             FrameRate = MainLayer.FrameRate;
             FrameCount = MainLayer.FrameCount;
+
+            // Ensure skeleton is cleared
+            Skeleton?.InitializeAnimationTransforms();
         }
 
-        public AnimationPlayer WithAnimation(string? name, Animation? anim)
+        public AnimationPlayer WithSubLayer(string? name, Animation? anim)
         {
             if (name != null && anim != null)
             {
                 if (Layers == null)
                     Layers = new();
 
-                Layers[name] = new(anim, Skeleton);
+                var nLayer = new AnimationSampler(anim, Skeleton);
+                FrameCount = Math.Max(nLayer.FrameCount, FrameCount);
+                Layers[name] = nLayer;
+            }
+            return this;
+        }
+
+        public AnimationPlayer WithSubLayer(string? name, Animation? anim, float startTime)
+        {
+            if (name != null && anim != null)
+            {
+                if (Layers == null)
+                    Layers = new();
+
+                var nLayer = new AnimationSampler(anim, Skeleton)
+                {
+                    StartFrame = startTime
+                };
+
+                FrameCount = Math.Max(nLayer.FrameCount + nLayer.StartFrame, FrameCount);
+                Layers[name] = nLayer;
+            }
+            return this;
+        }
+
+        public AnimationPlayer WithSubLayer(string? name, Animation? anim, float startTime, float blend)
+        {
+            if (name != null && anim != null)
+            {
+                if (Layers == null)
+                    Layers = new();
+
+                var nLayer = new AnimationSampler(anim, Skeleton);
+
+                nLayer.Weights.Add(new(0, 0));
+                nLayer.Weights.Add(new(nLayer.FrameCount * blend, 1));
+                nLayer.StartFrame = startTime;
+
+                FrameCount = Math.Max(nLayer.FrameCount + nLayer.StartFrame, FrameCount);
+                Layers[name] = nLayer;
             }
             return this;
         }
@@ -77,7 +119,7 @@ namespace Borks.Graphics3D
                 if (Solvers == null)
                     Solvers = new();
 
-                Solvers = new();
+                Solvers[name] = solver;
             }
 
             return this;
@@ -89,9 +131,9 @@ namespace Borks.Graphics3D
 
         public void Update(float time, AnimationSampleType type)
         {
-            if (MainLayer == null)
-                throw new Exception(); // TODO: Exceptions
-
+            // TODO: Could do with some refactoring to not
+            // make this necessary.
+            Skeleton?.InitializeAnimationTransforms();
             MainLayer.Update(time, type);
 
             if(Layers != null)

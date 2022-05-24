@@ -60,7 +60,8 @@ namespace Borks.Graphics3D.AnimationSampling
                     this,
                     bone,
                     target,
-                    skeletonAnimation.TransformType));
+                    skeletonAnimation.TransformType,
+                    skeletonAnimation.TransformSpace));
             }
         }
 
@@ -74,6 +75,7 @@ namespace Borks.Graphics3D.AnimationSampling
 
         public void Update()
         {
+            
             foreach (var targetSampler in TargetSamplers)
             {
                 targetSampler.Value.Update();

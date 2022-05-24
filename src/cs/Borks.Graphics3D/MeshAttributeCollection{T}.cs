@@ -269,7 +269,6 @@ namespace Borks.Graphics3D
 
             // Note: must get with stride
             var index = vertexIndex * Dimension + _countPerVertex[vertexIndex];
-            var test = _countPerVertex[vertexIndex];
             // Now assign our item and count.
             _items[index] = item;
             _countPerVertex[vertexIndex]++;

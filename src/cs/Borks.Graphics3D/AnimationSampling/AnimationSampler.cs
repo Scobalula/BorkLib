@@ -61,6 +61,11 @@ namespace Borks.Graphics3D.AnimationSampling
         /// </summary>
         public float FrameTime => 1.0f / FrameRate;
 
+        /// <summary>
+        /// Gets or Sets the frame this sampler starts at.
+        /// </summary>
+        public float StartFrame { get; set; }
+
         public AnimationSampler(Animation animation)
         {
             Animation = animation;
@@ -108,12 +113,12 @@ namespace Borks.Graphics3D.AnimationSampling
 
         public void Update(float time) => Update(time, AnimationSampleType.AbsoluteFrameTime);
 
-        public void Update(float time, AnimationSampleType type)
+        public AnimationSampler Update(float time, AnimationSampleType type)
         {
             switch(type)
             {
                 case AnimationSampleType.Percentage:
-                    CurrentTime = Length * time;
+                    CurrentTime = FrameCount * time;
                     break;
                 case AnimationSampleType.AbsoluteFrameTime:
                     CurrentTime = time;
@@ -128,13 +133,14 @@ namespace Borks.Graphics3D.AnimationSampling
 
             // Update our weight.
             var cursor = CurrentWeightsCursor;
-            CurrentWeight = AnimationHelper.GetWeight(Weights, time, 1.0f, ref cursor);
+            CurrentWeight = AnimationHelper.GetWeight(Weights, time, StartFrame, 1.0f, ref cursor);
             // Update our cursor to speed up linear sampling.
             CurrentWeightsCursor = cursor;
 
             // Update sub-samplers
-            if(CurrentWeight != 0)
-                SkeletonAnimationSampler?.Update();
+            SkeletonAnimationSampler?.Update();
+
+            return this;
         }
     }
 }

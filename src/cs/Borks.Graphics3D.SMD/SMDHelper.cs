@@ -117,7 +117,7 @@ namespace Borks.Graphics3D.SMD
                 {
                     // Assume a relative animation, SMD has no indicator of type.
                     animation = new(skeleton);
-                    animation.SkeletonAnimation!.TransformType = TransformType.Relative;
+                    animation.SkeletonAnimation!.TransformType = TransformType.Absolute;
 
                     foreach (var bone in skeleton.Bones)
                     {
@@ -184,8 +184,8 @@ namespace Borks.Graphics3D.SMD
             var norX       = float.Parse(reader.Parse(false));
             var norY       = float.Parse(reader.Parse(false));
             var norZ       = float.Parse(reader.Parse(false));
-            var uvX        = float.Parse(reader.Parse(false));
-            var uvY        = float.Parse(reader.Parse(false));
+            var uvX        = 1 - float.Parse(reader.Parse(false));
+            var uvY        = 1 - float.Parse(reader.Parse(false));
 
             mesh.Positions.Add(new(posX, posY, posZ));
             mesh.Normals.Add(Vector3.Normalize(new(norX, norY, norZ)));

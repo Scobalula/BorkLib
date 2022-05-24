@@ -33,6 +33,8 @@ namespace Borks.Graphics3D.SMD
 
             SMDHelper.Read(smdReader, out var skeleton, out var model, out var animation);
 
+            skeleton?.GenerateGlobalTransforms();
+
             if (skeleton != null)
                 output.Objects.Add(skeleton);
             if (model != null)

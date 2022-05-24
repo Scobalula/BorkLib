@@ -4,11 +4,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Borks.Graphics3D
+namespace Borks.Graphics3D.CoDXAsset
 {
-    public enum TransformSpace
+    internal class CoDXAnimHelper
     {
-        Local,
-        World,
     }
 }

@@ -65,6 +65,16 @@ namespace Borks.Graphics3D
         }
 
         /// <summary>
+        /// Initializes a new instance of the <see cref="Animation"/> class.
+        /// </summary>
+        public Animation(SkeletonAnimation? skelAnim)
+        {
+            Framerate = 30.0f;
+            Actions = new();
+            SkeletonAnimation = skelAnim;
+        }
+
+        /// <summary>
         /// Calculates the frame count based off the animation frame ranges.
         /// </summary>
         /// <returns>The total frame count based off the frame range.</returns>

@@ -369,8 +369,8 @@ namespace Borks.Graphics3D.SEModel
                 {
                     var vertCount = mesh.Positions.Count;
                     var faceCount = mesh.Faces.Count;
-                    var layerCount = mesh.UVLayers.Dimension <= 0 ? 1 : mesh.UVLayers.Dimension;
-                    var influences = mesh.Influences.Dimension <= 0 || boneCount <= 0 ? 0 : mesh.Influences.Dimension;
+                    var layerCount = mesh.UVLayers.Count <= 0 ? 1 : mesh.UVLayers.Dimension;
+                    var influences = mesh.Influences.Count <= 0 || boneCount <= 0 ? 0 : mesh.Influences.Dimension;
 
                     writer.Write((byte)0); // Unused flags
 

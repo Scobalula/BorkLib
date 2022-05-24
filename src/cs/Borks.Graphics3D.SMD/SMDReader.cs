@@ -21,7 +21,7 @@ namespace Borks.Graphics3D.SMD
         /// <summary>
         /// Gets or Sets the file string.
         /// </summary>
-        public char[] FileString { get; set; }
+        public string FileString { get; set; }
 
         /// <summary>
         /// Gets or Sets the offset within the string that we are currently at.
@@ -40,7 +40,7 @@ namespace Borks.Graphics3D.SMD
 
         public SMDReader(TextReader reader)
         {
-            FileString = reader.ReadToEnd().ToArray();
+            FileString = reader.ReadToEnd();
         }
 
         /// <summary>
@@ -83,7 +83,7 @@ namespace Borks.Graphics3D.SMD
             }
         }
 
-        public Span<char> Parse(bool skipNewLines = true)
+        public ReadOnlySpan<char> Parse(bool skipNewLines = true)
         {
             while (Offset < FileString.Length)
             {

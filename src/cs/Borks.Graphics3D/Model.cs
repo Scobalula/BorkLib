@@ -65,5 +65,29 @@ namespace Borks.Graphics3D
         {
             Skeleton?.AssignBoneIndices();
         }
+
+        public int GetVertexCount()
+        {
+            var result = 0;
+
+            foreach (var mesh in Meshes)
+            {
+                result += mesh.Positions.Count;
+            }
+
+            return result;
+        }
+
+        public int GetFaceCount()
+        {
+            var result = 0;
+
+            foreach (var mesh in Meshes)
+            {
+                result += mesh.Faces.Count;
+            }
+
+            return result;
+        }
     }
 }
