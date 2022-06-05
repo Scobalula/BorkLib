@@ -5,6 +5,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Numerics;
+using System.Runtime.InteropServices;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -15,11 +16,12 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
     /// </summary>
     public sealed class BinaryTokenWriter : TokenWriter
     {
-        private static byte[] LZ4Magic = { 0x2A, 0x4C, 0x5A, 0x34, 0x2A };
-        /// <summary>
-        /// Gets or Sets the Writer
-        /// </summary>
-        private BinaryWriter Writer { get; set; }
+        private static readonly byte[] LZ4Magic = { 0x2A, 0x4C, 0x5A, 0x34, 0x2A };
+
+        public byte[] OutputBuffer { get; set; }
+
+        public int CurrentOutputPosition { get; set; }
+
 
         private Stream Output { get; set; }
 
@@ -29,26 +31,21 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         /// <param name="fileName"></param>
         public BinaryTokenWriter(string fileName)
         {
-            Writer = new(new MemoryStream());
+            OutputBuffer = new byte[65535];
             Output = File.Create(fileName);
         }
 
         public BinaryTokenWriter(Stream stream)
         {
-            Writer = new(new MemoryStream());
+            OutputBuffer = new byte[65535];
             Output = stream;
         }
 
         private void AlignWriter(int alignment)
         {
-            alignment -= 1;
-            var padSize = (int)((~alignment & Writer.BaseStream.Position + alignment) - Writer.BaseStream.Position);
-
-            if (padSize <= 0)
-                return;
-
-            Span<byte> padBuffer = stackalloc byte[padSize];
-            Writer.Write(padBuffer);
+            var padSize = CurrentOutputPosition % alignment;
+            for (int i = 0; i < padSize; i++)
+                Write((byte)0);
         }
 
         ///// <summary>
@@ -59,7 +56,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         //private void WriteHash(string tokenID, TokenDataType dataType)
         //{
         //    AlignWriter(4);
-        //    Writer.Write(CRC16(tokenID, (int)dataType));
+        //    Write(CRC16(tokenID, (int)dataType));
         //}
 
         /// <summary>
@@ -70,7 +67,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         private void WriteHash(ushort hash)
         {
             AlignWriter(4);
-            Writer.Write(hash);
+            Write(hash);
         }
 
         /// <summary>
@@ -82,8 +79,8 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             AlignWriter(4);
             foreach (var c in value)
-                Writer.Write((byte)char.ToLower(c));
-            Writer.Write((byte)0);
+                Write((byte)char.ToLower(c));
+            Write((byte)0);
         }
 
         /// <summary>
@@ -117,8 +114,8 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write(boneIndex);
-            Writer.Write(parentIndex);
+            Write(boneIndex);
+            Write(parentIndex);
             WriteString(boneName);
         }
 
@@ -131,7 +128,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write(value);
+            Write(value);
         }
 
         /// <summary>
@@ -143,7 +140,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write(value);
+            Write(value);
         }
 
         /// <summary>
@@ -155,7 +152,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write(value);
+            Write(value);
         }
 
         /// <summary>
@@ -167,7 +164,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(2);
-            Writer.Write(value);
+            Write(value);
         }
 
         /// <summary>
@@ -179,7 +176,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(2);
-            Writer.Write(value);
+            Write(value);
         }
 
         /// <summary>
@@ -191,8 +188,8 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write(value.X);
-            Writer.Write(value.Y);
+            Write(value.X);
+            Write(value.Y);
         }
 
         /// <summary>
@@ -204,9 +201,9 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write(value.X);
-            Writer.Write(value.Y);
-            Writer.Write(value.Z);
+            Write(value.X);
+            Write(value.Y);
+            Write(value.Z);
         }
 
         /// <summary>
@@ -218,9 +215,9 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(2);
-            Writer.Write((ushort)(value.X * 32767.0f));
-            Writer.Write((ushort)(value.Y * 32767.0f));
-            Writer.Write((ushort)(value.Z * 32767.0f));
+            Write((ushort)(value.X * 32767.0f));
+            Write((ushort)(value.Y * 32767.0f));
+            Write((ushort)(value.Z * 32767.0f));
         }
 
         /// <summary>
@@ -232,10 +229,10 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write(value.X);
-            Writer.Write(value.Y);
-            Writer.Write(value.Z);
-            Writer.Write(value.W);
+            Write(value.X);
+            Write(value.Y);
+            Write(value.Z);
+            Write(value.W);
         }
 
         /// <summary>
@@ -247,10 +244,10 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         {
             WriteHash((ushort)hash);
             AlignWriter(4);
-            Writer.Write((byte)(value.X * 255.0f));
-            Writer.Write((byte)(value.Y * 255.0f));
-            Writer.Write((byte)(value.Z * 255.0f));
-            Writer.Write((byte)(value.W * 255.0f));
+            Write((byte)(value.X * 255.0f));
+            Write((byte)(value.Y * 255.0f));
+            Write((byte)(value.Z * 255.0f));
+            Write((byte)(value.W * 255.0f));
         }
 
         /// <summary>
@@ -262,8 +259,8 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         public override void WriteBoneWeight(string name, uint hash, int boneIndex, float boneWeight)
         {
             WriteHash((ushort)hash);
-            Writer.Write((ushort)boneIndex);
-            Writer.Write(boneWeight);
+            Write((ushort)boneIndex);
+            Write(boneWeight);
         }
 
         /// <summary>
@@ -275,8 +272,8 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         public override void WriteTri(string name, uint hash, int objectIndex, int materialIndex)
         {
             WriteHash((ushort)hash);
-            Writer.Write((byte)objectIndex);
-            Writer.Write((byte)materialIndex);
+            Write((byte)objectIndex);
+            Write((byte)materialIndex);
         }
 
         /// <summary>
@@ -288,8 +285,8 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         public override void WriteTri16(string name, uint hash, int objectIndex, int materialIndex)
         {
             WriteHash((ushort)hash);
-            Writer.Write((ushort)objectIndex);
-            Writer.Write((ushort)materialIndex);
+            Write((ushort)objectIndex);
+            Write((ushort)materialIndex);
         }
 
         /// <summary>
@@ -300,9 +297,9 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         public override void WriteUVSet(string name, uint hash, Vector2 value)
         {
             WriteHash((ushort)hash);
-            Writer.Write((ushort)1);
-            Writer.Write(value.X);
-            Writer.Write(value.Y);
+            Write((ushort)1);
+            Write(value.X);
+            Write(value.Y);
         }
 
         /// <summary>
@@ -314,13 +311,13 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         public override void WriteUVSet(string name, uint hash, int count, IEnumerable<Vector2> values)
         {
             WriteHash((ushort)hash);
-            Writer.Write((ushort)count);
+            Write((ushort)count);
 
 
             foreach (var value in values)
             {
-                Writer.Write((ushort)value.X);
-                Writer.Write((ushort)value.Y);
+                Write((ushort)value.X);
+                Write((ushort)value.Y);
             }
         }
 
@@ -333,7 +330,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         public override void WriteUShortString(string name, uint hash, ushort intVal, string strVal)
         {
             WriteHash((ushort)hash);
-            Writer.Write(intVal);
+            Write(intVal);
             WriteString(strVal);
         }
 
@@ -348,7 +345,7 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         public override void WriteUShortStringX3(string name, uint hash, ushort intVal, string strVal1, string strVal2, string strVal3)
         {
             WriteHash((ushort)hash);
-            Writer.Write(intVal);
+            Write(intVal);
             WriteString(strVal1);
             WriteString(strVal2);
             WriteString(strVal3);
@@ -359,35 +356,19 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
         /// </summary>
         public override void FinalizeWrite()
         {
-            if (Writer.BaseStream is not MemoryStream memStream)
-                return;
-
-            var result = new byte[LZ4Codec.MaximumOutputSize((int)memStream.Length)];
-
-            var resultSize = LZ4Codec.Encode(memStream.GetBuffer(), 0, (int)memStream.Length, result, 0, result.Length);
-
-            File.WriteAllBytes("test.x", memStream.ToArray());
+            var result = new byte[LZ4Codec.MaximumOutputSize(CurrentOutputPosition)];
+            var resultSize = LZ4Codec.Encode(OutputBuffer, 0, CurrentOutputPosition, result, 0, result.Length);
 
             Output.Write(LZ4Magic);
-            Output.Write(BitConverter.GetBytes((int)memStream.Length));
+            Output.Write(BitConverter.GetBytes(CurrentOutputPosition));
             Output.Write(result, 0, resultSize);
-
-            Writer?.Close();
         }
 
         protected override void Dispose(bool disposing)
         {
             if (disposing)
             {
-                if (Writer != null)
-                {
-                    Writer.Dispose();
-                }
 
-                if(Output != null)
-                {
-                    Output.Dispose();
-                }
             }
         }
 
@@ -409,6 +390,49 @@ namespace Borks.Graphics3D.CoDXAsset.Tokens
             }
 
             return (ushort)result;
+        }
+
+        public void Write<T>(T val) where T : unmanaged
+        {
+            var asBytes = MemoryMarshal.Cast<T, byte>(stackalloc T[1]
+            {
+                val
+            });
+            var byteCount = asBytes.Length;
+            Resize(byteCount);
+            if(byteCount < 8)
+            {
+                for (int i = 0; i < byteCount; i++)
+                {
+                    OutputBuffer[CurrentOutputPosition++] = asBytes[i];
+                }
+            }
+            else
+            {
+
+            }
+            //var dst = OutputBuffer.AsSpan().Slice(CurrentOutputPosition, byteCount);
+
+            ////asBytes.CopyTo(dst);
+            ////CurrentOutputPosition += byteCount;
+        }
+
+
+        /// <summary>
+        /// Resizes the output buffer if we have more data to write.
+        /// </summary>
+        /// <param name="sizeOf"></param>
+        internal void Resize(int sizeOf)
+        {
+            if (CurrentOutputPosition + sizeOf < OutputBuffer.Length)
+                return;
+
+            var newSize = OutputBuffer.Length * 2;
+            var newArray = new byte[newSize];
+
+            Buffer.BlockCopy(OutputBuffer, 0, newArray, 0, OutputBuffer.Length);
+
+            OutputBuffer = newArray;
         }
     }
 }

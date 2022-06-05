@@ -8,7 +8,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Borks.Cryptography.MurMur3\Borks.Cryptography.MurMur3.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.CoDXAsset\Borks.Graphics3D.CoDXAsset.csproj" />
+    <ProjectReference Include="..\Borks.Graphics3D.GLTF\Borks.Graphics3D.GLTF.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.SEAnim\Borks.Graphics3D.SEAnim.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.SEModel\Borks.Graphics3D.SEModel.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.SMD\Borks.Graphics3D.SMD.csproj" />

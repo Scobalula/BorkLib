@@ -14,6 +14,11 @@ namespace Borks.Graphics3D
     public enum MeshAttributeFlags : long
     {
         /// <summary>
+        /// Defines no extended attributes.
+        /// </summary>
+        None = 0,
+
+        /// <summary>
         /// Defines if the mesh contains normals.
         /// </summary>
         Normals = 1 << 0,

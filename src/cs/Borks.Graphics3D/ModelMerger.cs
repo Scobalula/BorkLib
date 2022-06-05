@@ -188,15 +188,15 @@ namespace Borks.Graphics3D
                         {
                             newMesh.Positions[i] = Vector3.Transform(newMesh.Positions[i], rotation) + translation;
 
-                            if (newMesh.Normals.ElementCount != 0)
+                            if (newMesh.Normals.Count != 0)
                                 newMesh.Normals[i] = Vector3.Normalize(Vector3.Transform(newMesh.Normals[i], rotation));
-                            if (newMesh.Tangents.ElementCount != 0)
+                            if (newMesh.Tangents.Count != 0)
                                 newMesh.Tangents[i] = Vector3.Normalize(Vector3.Transform(newMesh.Tangents[i], rotation));
-                            if (newMesh.BiTangents.ElementCount != 0)
+                            if (newMesh.BiTangents.Count != 0)
                                 newMesh.BiTangents[i] = Vector3.Normalize(Vector3.Transform(newMesh.BiTangents[i], rotation));
 
                             // Remap influences to the new skeleton if we have any
-                            if(newMesh.Influences.ElementCount != 0 && root.Skeleton != null && model.Skeleton != null)
+                            if(newMesh.Influences.Count != 0 && root.Skeleton != null && model.Skeleton != null)
                             {
                                 for (int v = 0; v < newMesh.Influences.Dimension; v++)
                                 {
@@ -309,11 +309,11 @@ namespace Borks.Graphics3D
                 {
                     newMesh.Positions[i] = Vector3.Transform(newMesh.Positions[i], rotation) + translation;
 
-                    if (newMesh.Normals.ElementCount != 0)
+                    if (newMesh.Normals.Count != 0)
                         newMesh.Normals[i] = Vector3.Normalize(Vector3.Transform(newMesh.Normals[i], rotation));
-                    if (newMesh.Tangents.ElementCount != 0)
+                    if (newMesh.Tangents.Count != 0)
                         newMesh.Tangents[i] = Vector3.Normalize(Vector3.Transform(newMesh.Tangents[i], rotation));
-                    if (newMesh.BiTangents.ElementCount != 0)
+                    if (newMesh.BiTangents.Count != 0)
                         newMesh.BiTangents[i] = Vector3.Normalize(Vector3.Transform(newMesh.BiTangents[i], rotation));
 
                     // Remap influences to the new skeleton if we have any

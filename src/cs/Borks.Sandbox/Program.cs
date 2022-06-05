@@ -7,6 +7,11 @@ using System.Security.Cryptography;
 using System.Text;
 using Borks.Graphics3D.Translator;
 using System.Diagnostics;
+using SharpGLTF;
+using System.Net.Http.Headers;
+using System.Numerics;
+using System.Data;
+using Borks.Cryptography.MurMur3;
 
 namespace Borks.Sandbox
 {
@@ -16,104 +21,174 @@ namespace Borks.Sandbox
         {
             var translatorFactory = new Graphics3DTranslatorFactory().WithDefaultTranslators();
 
+            var model = SharpGLTF.Schema2.ModelRoot.Load(@"C:\Visual Studio\Projects\GreyhoundPublic\Greyhound\src\WraithXCOD\x64\Debug\exported_files\modern_warfare_4\xmodels\body_mp_western_zedra_1_1_lod1\body_mp_western_zedra_1_1_lod1_LOD0.gltf");
+            var skin = model.LogicalSkins.Count == 0 ? null : model.LogicalSkins[0];
+            var result = new Model();
+            var skeleton = new Skeleton();
+            result.Skeleton = skeleton;
 
-            //translatorFactory.RegisterTranslator(new SEAnimTranslator());
-            //translatorFactory.RegisterTranslator(new SEModelTranslator());
-            //translatorFactory.RegisterTranslator(new CoDXAssetTranslator());
-
-
-            //var md5 = IncrementalHash.CreateHash(HashAlgorithmName.MD5);
-
-            //var smdTranslator     = new SMDTranslator();
-            //var seanimTranslator  = new SEAnimTranslator();
-            //var semodelTranslator = new SEModelTranslator();
-
-            //var io = new Graphics3DTranslatorIO();
-
-            //seanimTranslator.Read(@"C:\Users\Admin\Downloads\MMWX\exported_files\xanims\vm_sn_delta_reload.seanim", io);
-            //seanimTranslator.Write(@"C:\Users\Admin\Downloads\MMWX\exported_files\xanims\vm_sn_delta_reload2.seanim", io);
-
-            //var anim = io.Animations[0];
-
-            //foreach (var action in anim.Actions)
+            //// Add all nodes, then sort out children
+            //foreach (var b in model.LogicalNodes)
             //{
-            //    Console.WriteLine(action.Name);
+            //    b.LocalTransform.GetDecomposed();
+            //    if(b.Name is null)
+            //    {
+            //        skeleton.Bones.Add(new($"bone_{b.LogicalIndex}")
+            //        {
+            //            //BaseLocalRotation = b.LocalTransform.Rotation,
+            //            //BaseLocalTranslation = b.LocalTransform.Translation,
+            //        });
+            //    }
+            //    else
+            //    {
+            //        skeleton.Bones.Add(new(b.Name.ToLower().Replace(".", "_").Replace(":", "_"))
+            //        {
+            //            //BaseLocalRotation = b.LocalTransform.Rotation,
+            //            //BaseLocalTranslation = b.LocalTransform.Translation,
+            //        });
+            //    }
             //}
 
-            //var reader = new BinaryTokenReader(@"D:\SteamLibrary\steamapps\common\Call of Duty Black Ops III\model_export\skye_ports\t9_lc10\vm_t9_lc10_nt.xmodel_bin");
+            //foreach (var node in model.LogicalNodes)
+            //{
+            //    foreach (var child in node.VisualChildren)
+            //    {
+            //        skeleton.Bones[child.LogicalIndex].Parent = skeleton.Bones[node.LogicalIndex];
+            //    }
+            //}
 
-            var mdl = translatorFactory.Load<Model>(@"F:\_scobalula\ai\re3_zombies\ai_zom_re3zombie_01_fb.xmodel_bin");
+            //skeleton.GenerateGlobalTransforms();
 
-            for (int i = 0; i < 8; i++)
+            //var matrices = skin.GetInverseBindMatricesAccessor().AsMatrix4x4Array();
+
+            //for (int i = 0; i < skin.JointsCount; i++)
+            //{
+            //    var gltfJoint = skin.GetJoint(i);
+            //    var newBone = skeleton.Bones[gltfJoint.Joint.LogicalIndex];
+            //    var matrix = matrices[i];
+            //    var asMatrix = Matrix4x4.CreateFromQuaternion(newBone.BaseWorldRotation);
+            //    asMatrix.Translation = newBone.BaseWorldTranslation;
+            //    var final = matrix * asMatrix;
+
+            //    Matrix4x4.Invert(matrix, out var newMatrix);
+
+            //    newBone.BaseWorldTranslation = newMatrix.Translation;
+            //    newBone.BaseWorldRotation = Quaternion.CreateFromRotationMatrix(newMatrix);
+            //}
+
+            //skeleton.GenerateLocalTransforms();
+
+            foreach (var gltfMaterial in model.LogicalMaterials)
             {
-                var watch = Stopwatch.StartNew();
-                Debugger.Break();
-                translatorFactory.Save(@"D:\SteamLibrary\steamapps\common\Call of Duty Black Ops III\model_export\stock_LOD01.xmodel_bin", mdl);
-                Debugger.Break();
-                Console.WriteLine(watch.ElapsedMilliseconds / 1000.0f);
+                result.Materials.Add(new(gltfMaterial.Name.ToLower().Replace(".", "_")));
             }
 
-            //var mdl = translatorFactory.Load<Model>(@"C:\Users\Admin\Downloads\stock_LOD0.smd");
-            //var anim = translatorFactory.Load<Animation>(@"C:\Users\Admin\Downloads\inspect.smd");
-            //var marv = AnimationHelper.ConvertTransformSpace(anim, mdl.Skeleton, TransformSpace.World);
+            foreach (var node in model.LogicalNodes)
+            {
+                if (node.Mesh is SharpGLTF.Schema2.Mesh gltfMesh)
+                {
+                    var transform = node.LocalTransform.Matrix;
+
+                    Console.WriteLine(transform.Translation);
+                    Console.WriteLine(gltfMesh.LogicalIndex);
+
+                    //if(marv is not null)
+                    //{
+                    //    transform = marv.LocalTransform.Matrix;
+                    //}
+
+                    foreach (var primitive in gltfMesh.Primitives)
+                    {
+
+                        if (primitive.DrawPrimitiveType != SharpGLTF.Schema2.PrimitiveType.TRIANGLES)
+                            throw new NotSupportedException($"Unsupported Gltf Primitive type: {primitive.DrawPrimitiveType}");
+
+                        // We require at least positions and indices
+                        var posAccessor = primitive.GetVertexAccessor("POSITION");
+                        if (posAccessor is null)
+                            continue;
+
+                        var positions = posAccessor.AsVector3Array();
+                        var indices = primitive.IndexAccessor.AsIndicesArray();
+                        var faceCount = indices.Count / 3;
 
 
-            //translatorFactory.Save(@"D:\SteamLibrary\steamapps\common\Call of Duty Black Ops III\model_export\stock_LOD0.xmodel_bin", mdl);
-            // translatorFactory.Save(@"C:\Users\Admin\Downloads\reload_empty.xanim_bin", marv);
+                        var newMesh = new Mesh(positions.Count, faceCount, 1, 1, 1, MeshAttributeFlags.None);
 
-            //var anim = translatorFactory.Load<Animation>(@"D:\SteamLibrary\steamapps\common\Call of Duty Black Ops III\xanim_export\t7_viewmodels\ap9\vm_ap9_reload_empty.XANIM_BIN");
-            //GC.Collect();
+                        if (newMesh.Materials.Count == 0)
+                        {
+                            result.Materials.Add(new("default_borkmat"));
+                        }
 
-            //// translatorFactory.Save(@"D:\SteamLibrary\steamapps\common\Call of Duty Black Ops III\model_export\_scobalula\character\iw7_zis_valleygirl\char_iw7_zis_valleygirl_viewhands.semodel", mdl);
-            //translatorFactory.Save("test.xanim_bin", anim);
+                        newMesh.Materials.Add(result.Materials[primitive.Material == null ? 0 : primitive.Material.LogicalIndex]);
 
+                        foreach (var position in positions)
+                        {
+                            newMesh.Positions.Add(Vector3.Transform(position, transform));
+                        }
 
-            //var test = translatorFactory.Load<Animation>("test.xanim_bin");
-            //foreach (var token in reader.EnumerateTokens())
-            //{
-            //    Console.WriteLine(token.Token.Name);
-            //}
+                        for (int i = 0; i < faceCount; i++)
+                        {
+                            newMesh.Faces.Add((
+                                (int)indices[i * 3 + 0],
+                                (int)indices[i * 3 + 1],
+                                (int)indices[i * 3 + 2]));
+                        }
 
+                        // Rest of data is optional, depending on if it is provided by the data
+                        var normAccessor = primitive.GetVertexAccessor("NORMAL");
 
+                        if (normAccessor is not null)
+                        {
+                            var normals = normAccessor.AsVector3Array();
 
-            //Printer.WriteLine("INIT", "------------------------");
-            //Printer.WriteLine("INIT", "SMD to SEModel/SEAnim");
-            //Printer.WriteLine("INIT", "Butterbloc Edition");
-            //Printer.WriteLine("INIT", "------------------------");
+                            foreach (var normal in normals)
+                            {
+                                newMesh.Normals.Add(Vector3.TransformNormal(normal, transform));
+                            }
+                        }
 
-            //var io = new Graphics3DTranslatorIO();
+                        // Try get skinning for marvooner
+                        int boneSets = 0;
+                        while (primitive.GetVertexAccessor($"JOINTS_{boneSets}") is not null)
+                            boneSets++;
 
-            //foreach (var file in args)
-            //{
-            //    var ext = Path.GetExtension(file);
+                        if (boneSets > 0)
+                        {
+                            newMesh.Influences.SetCapacity(positions.Count, boneSets * 4);
 
-            //    if(!string.IsNullOrEmpty(ext) && ext.Equals(".smd", StringComparison.CurrentCultureIgnoreCase))
-            //    {
-            //        Printer.WriteLine("MARV", $"Converting: {Path.GetFileName(file)}");
+                            for (int i = 0; i < boneSets; i++)
+                            {
+                                var jointsAccessor = primitive.GetVertexAccessor($"JOINTS_{i}");
+                                var weightsAccessor = primitive.GetVertexAccessor($"WEIGHTS_{i}");
 
-            //        smdTranslator.Read(file, io);
+                                if (jointsAccessor is null || weightsAccessor is null)
+                                    throw new Exception("Null skinning info.");
 
-            //        // Check did we get an animation from this
-            //        if(io.Animations.Count > 0)
-            //        {
-            //            seanimTranslator.Write(Path.ChangeExtension(file, ".seanim"), io);
-            //        }
-            //        else
-            //        {
-            //            semodelTranslator.Write(Path.ChangeExtension(file, ".semodel"), io);
-            //        }
+                                var joints = jointsAccessor.AsVector4Array();
+                                var weights = weightsAccessor.AsVector4Array();
 
-            //        Printer.WriteLine("MARV", $"Converted: {Path.GetFileName(file)}");
-            //    }
+                                for (int w = 0; w < joints.Count; w++)
+                                {
+                                    var joint = joints[w];
+                                    var weight = weights[w];
 
-            //    io.Models.Clear();
-            //    io.Skeletons.Clear();
-            //    io.Animations.Clear();
-            //}
+                                    newMesh.Influences.Add((skin.GetJoint((int)joint.X).Joint.LogicalIndex, weight.X));
+                                    newMesh.Influences.Add((skin.GetJoint((int)joint.Y).Joint.LogicalIndex, weight.Y));
+                                    newMesh.Influences.Add((skin.GetJoint((int)joint.Z).Joint.LogicalIndex, weight.Z));
+                                    newMesh.Influences.Add((skin.GetJoint((int)joint.W).Joint.LogicalIndex, weight.W));
+                                }
+                            }
+                        }
 
-            //Printer.WriteLine("DONE", "Execution complete.");
+                        result.Meshes.Add(newMesh);
+                    }
+                }
+            }
 
-            //Console.ReadLine();
+            translatorFactory.Save("marv.semodel", result);
+
+            var read = translatorFactory.Load<Model>("marv.semodel");
         }
     }
 }
