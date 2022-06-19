@@ -8,7 +8,13 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Borks.Compression.Oodle\Borks.Compression.Oodle.csproj" />
+    <ProjectReference Include="..\Borks.Compression.ZLIB\Borks.Compression.ZLIB.csproj" />
+    <ProjectReference Include="..\Borks.Compression.ZStandard\Borks.Compression.ZStandard.csproj" />
+    <ProjectReference Include="..\Borks.Compression\Borks.Compression.csproj" />
+    <ProjectReference Include="..\Borks.Cryptography.FNV\Borks.Cryptography.FNV.csproj" />
     <ProjectReference Include="..\Borks.Cryptography.MurMur3\Borks.Cryptography.MurMur3.csproj" />
+    <ProjectReference Include="..\Borks.Graphics3D.CoDXAssetCooked\Borks.Graphics3D.CoDXAssetCooked.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.CoDXAsset\Borks.Graphics3D.CoDXAsset.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.GLTF\Borks.Graphics3D.GLTF.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.SEAnim\Borks.Graphics3D.SEAnim.csproj" />
@@ -16,6 +22,8 @@
     <ProjectReference Include="..\Borks.Graphics3D.SMD\Borks.Graphics3D.SMD.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D.Translator\Borks.Graphics3D.Translator.csproj" />
     <ProjectReference Include="..\Borks.Graphics3D\Borks.Graphics3D.csproj" />
+    <ProjectReference Include="..\Borks.IO.ProcessInterop\Borks.IO.ProcessInterop.csproj" />
+    <ProjectReference Include="..\Borks.IO\Borks.IO.csproj" />
     <ProjectReference Include="..\Borks\Borks.csproj" />
   </ItemGroup>
 

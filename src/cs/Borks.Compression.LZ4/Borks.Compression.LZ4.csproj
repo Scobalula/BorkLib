@@ -8,6 +8,7 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Borks.Compression\Borks.Compression.csproj" />
     <ProjectReference Include="..\Borks\Borks.csproj" />
   </ItemGroup>
 

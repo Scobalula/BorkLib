@@ -8,7 +8,17 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <ProjectReference Include="..\Borks.Compression\Borks.Compression.csproj" />
     <ProjectReference Include="..\Borks\Borks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Native\X64MiniZ.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
+    <None Update="Native\X86MiniZ.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

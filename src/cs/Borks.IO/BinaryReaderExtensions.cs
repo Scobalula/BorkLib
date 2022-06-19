@@ -370,5 +370,16 @@ namespace Borks.IO
             reader.BaseStream.Position = temp;
             return result;
         }
+
+        public static long Align(this BinaryReader reader, long alignment)
+        {
+            if(alignment != 0)
+            {
+                alignment -= 1;
+                reader.BaseStream.Position = ~alignment & reader.BaseStream.Position + alignment;
+            }
+
+            return reader.BaseStream.Position;
+        }
     }
 }

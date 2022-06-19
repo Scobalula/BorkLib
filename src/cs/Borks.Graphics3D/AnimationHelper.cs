@@ -130,7 +130,7 @@ namespace Borks.Graphics3D
         /// <param name="newSpace">The new <see cref="TransformSpace"/> to convert the animation to.</param>
         /// <returns>Resulting animation, if no skeleton animation is provided or the space is the same, the input animation is returned.</returns>
         public static Animation ConvertTransformSpace(Animation input, TransformSpace newSpace) =>
-            ConvertTransformSpace(input, newSpace);
+            ConvertTransformSpace(input, null, newSpace);
 
         /// <summary>
         /// Converts the provided <see cref="Animation"/> that contains a <see cref="SkeletonAnimation"/> to the given transform space.
