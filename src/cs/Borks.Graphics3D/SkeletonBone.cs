@@ -197,6 +197,16 @@ namespace Borks.Graphics3D
             }
         }
 
+        public void GenerateWorldTransforms()
+        {
+            GenerateWorldTransform();
+
+            foreach (var child in Children)
+            {
+                child.GenerateWorldTransforms();
+            }
+        }
+
         public void GenerateCurrentLocalTransform()
         {
             if (Parent != null)

@@ -1,4 +1,4 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <OutputType>Exe</OutputType>
@@ -25,6 +25,12 @@
     <ProjectReference Include="..\Borks.IO.ProcessInterop\Borks.IO.ProcessInterop.csproj" />
     <ProjectReference Include="..\Borks.IO\Borks.IO.csproj" />
     <ProjectReference Include="..\Borks\Borks.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Skelly.TwoBoneIKSolver.dll">
+      <CopyToOutputDirectory>Always</CopyToOutputDirectory>
+    </None>
   </ItemGroup>
 
 </Project>

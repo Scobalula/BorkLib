@@ -43,7 +43,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Compression.ZLIB", "B
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Compression.Oodle", "Borks.Compression.Oodle\Borks.Compression.Oodle.csproj", "{30123122-6E38-47E9-9E1D-2709120366FE}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Borks.Compression.ZStandard", "Borks.Compression.ZStandard\Borks.Compression.ZStandard.csproj", "{737B3EF8-5206-4A39-BC0D-7538072A0FCC}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Borks.Compression.ZStandard", "Borks.Compression.ZStandard\Borks.Compression.ZStandard.csproj", "{737B3EF8-5206-4A39-BC0D-7538072A0FCC}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Borks.Plugins", "Borks.Plugins\Borks.Plugins.csproj", "{6E59515E-183D-45FA-B811-81D68D36CF83}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -271,6 +273,18 @@ Global
 		{737B3EF8-5206-4A39-BC0D-7538072A0FCC}.Release|x64.Build.0 = Release|Any CPU
 		{737B3EF8-5206-4A39-BC0D-7538072A0FCC}.Release|x86.ActiveCfg = Release|Any CPU
 		{737B3EF8-5206-4A39-BC0D-7538072A0FCC}.Release|x86.Build.0 = Release|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Debug|x64.Build.0 = Debug|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Debug|x86.Build.0 = Debug|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Release|Any CPU.Build.0 = Release|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Release|x64.ActiveCfg = Release|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Release|x64.Build.0 = Release|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Release|x86.ActiveCfg = Release|Any CPU
+		{6E59515E-183D-45FA-B811-81D68D36CF83}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
